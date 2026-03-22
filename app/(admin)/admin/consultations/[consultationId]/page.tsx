@@ -24,13 +24,19 @@ export default function AdminConsultationDetailPage() {
   }
 
   const consultation = consultationQuery.data;
+  const studentName = [
+    consultation.studentProfile?.firstName ?? consultation.studentFirstName,
+    consultation.studentProfile?.lastName ?? consultation.studentLastName,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow=""
-        title={`Consultation Details`}
-        description="Check"
+        eyebrow="Admin"
+        title="Consultation details"
+        description="Review the full consultation record and its audit trail."
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <Card>
@@ -40,20 +46,89 @@ export default function AdminConsultationDetailPage() {
               <StatusBadge status={consultation.status} />
             </div>
             <div className="rounded-[1.5rem] bg-brand-cream p-5">
-                <p className="text-sm text-muted-foreground">Scheduled time</p>
+              <p className="text-sm text-muted-foreground">Scheduled time</p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {formatDateTime(consultation.scheduledAt)}
+              </p>
+            </div>
+            <div className="grid gap-4 rounded-[1.5rem] bg-brand-cream p-5 md:grid-cols-2">
+              <div>
+                <p className="text-sm text-muted-foreground">Student name</p>
                 <p className="mt-2 text-lg font-semibold text-foreground">
-                  {formatDateTime(consultation.scheduledAt)}
+                  {studentName || "Unknown student"}
                 </p>
               </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Student email</p>
+                <p className="mt-2 text-base text-foreground">
+                  {consultation.studentProfile?.email ?? "No email available"}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Student ID</p>
+                <p className="mt-2 break-all text-sm text-foreground">
+                  {consultation.studentId}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Consultation ID</p>
+                <p className="mt-2 break-all text-sm text-foreground">
+                  {consultation.id}
+                </p>
+              </div>
+            </div>
             <div className="rounded-[1.5rem] bg-brand-cream p-5">
-              <p className="text-sm text-muted-foreground">Student profile</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {consultation.studentProfile?.firstName}{" "}
-                {consultation.studentProfile?.lastName}
+              <p className="text-sm text-muted-foreground">Reason</p>
+              <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">
+                {consultation.reason}
               </p>
-              <p className="mt-1 text-sm text-muted-foreground">
-                {consultation.studentProfile?.email}
-              </p>
+            </div>
+            {consultation.cancelledAt ? (
+              <div className="grid gap-4 rounded-[1.5rem] bg-brand-cream p-5 md:grid-cols-2">
+                <div>
+                  <p className="text-sm text-muted-foreground">Cancelled at</p>
+                  <p className="mt-2 text-sm text-foreground">
+                    {formatDateTime(consultation.cancelledAt)}
+                  </p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground">Completion</p>
+                  <p className="mt-2 text-sm text-foreground">
+                    {consultation.isCompleted ? "Completed" : "Not completed"}
+                  </p>
+                </div>
+                {consultation.cancellationReason ? (
+                  <div className="md:col-span-2">
+                    <p className="text-sm text-muted-foreground">
+                      Cancellation reason
+                    </p>
+                    <p className="mt-2 whitespace-pre-wrap text-sm leading-6 text-foreground">
+                      {consultation.cancellationReason}
+                    </p>
+                  </div>
+                ) : null}
+              </div>
+            ) : (
+              <div className="rounded-[1.5rem] bg-brand-cream p-5">
+                <p className="text-sm text-muted-foreground">Completion</p>
+                <p className="mt-2 text-sm text-foreground">
+                  {consultation.isCompleted ? "Completed" : "Not completed"}
+                </p>
+              </div>
+            )}
+            <div className="grid gap-4 rounded-[1.5rem] bg-brand-cream p-5 md:grid-cols-2">
+              <div>
+                <p className="text-sm text-muted-foreground">Created at</p>
+                <p className="mt-2 text-sm text-foreground">
+                  {formatDateTime(consultation.createdAt)}
+                </p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground">Last updated</p>
+                <p className="mt-2 text-sm text-foreground">
+                  {formatDateTime(consultation.updatedAt)}
+                </p>
+              </div>
             </div>
           </CardContent>
         </Card>

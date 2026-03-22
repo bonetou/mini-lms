@@ -1,7 +1,12 @@
 "use client";
 
+import { useState } from "react";
+import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { apiRequest, ApiClientError } from "@/lib/api/client";
+import { ApiClientError } from "@/lib/api/client";
+import { useSignUpMutation } from "@/lib/query/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,62 +17,79 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 export function SignUpForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
   const router = useRouter();
+  const signUpMutation = useSignUpMutation();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoading(true);
     setError(null);
 
     if (password !== repeatPassword) {
       setError("Passwords do not match");
-      setIsLoading(false);
       return;
     }
 
     try {
-      await apiRequest("/api/auth/sign-up", {
-        method: "POST",
-        body: JSON.stringify({
-          email,
-          password,
-        }),
+      await signUpMutation.mutateAsync({
+        firstName,
+        lastName,
+        email,
+        password,
       });
-      router.push("/auth/sign-up-success");
+      router.push("/login?registered=1");
     } catch (error: unknown) {
       if (error instanceof ApiClientError) {
         setError(error.message);
       } else {
         setError(error instanceof Error ? error.message : "An error occurred");
       }
-    } finally {
-      setIsLoading(false);
     }
   };
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
-      <Card>
+      <Card className="overflow-hidden border-border/70 bg-card/90">
         <CardHeader>
-          <CardTitle className="text-2xl">Sign up</CardTitle>
-          <CardDescription>Create a new account</CardDescription>
+          <p className="text-xs font-semibold uppercase tracking-[0.28em] text-brand-blue">
+            New Account
+          </p>
+          <CardTitle className="text-3xl">Sign up</CardTitle>
+          <CardDescription>Create a student account for booking consultations.</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSignUp}>
             <div className="flex flex-col gap-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="grid gap-2">
+                  <Label htmlFor="first-name">First name</Label>
+                  <Input
+                    id="first-name"
+                    required
+                    value={firstName}
+                    onChange={(e) => setFirstName(e.target.value)}
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="last-name">Last name</Label>
+                  <Input
+                    id="last-name"
+                    required
+                    value={lastName}
+                    onChange={(e) => setLastName(e.target.value)}
+                  />
+                </div>
+              </div>
               <div className="grid gap-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -104,13 +126,18 @@ export function SignUpForm({
                 />
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
-              <Button type="submit" className="w-full" disabled={isLoading}>
-                {isLoading ? "Creating an account..." : "Sign up"}
+              <Button
+                type="submit"
+                className="w-full"
+                disabled={signUpMutation.isPending}
+              >
+                {signUpMutation.isPending ? "Creating an account..." : "Sign up"}
+                <ArrowRight className="h-4 w-4" />
               </Button>
             </div>
             <div className="mt-4 text-center text-sm">
               Already have an account?{" "}
-              <Link href="/auth/login" className="underline underline-offset-4">
+              <Link href="/login" className="underline underline-offset-4">
                 Login
               </Link>
             </div>

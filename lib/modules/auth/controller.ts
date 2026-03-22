@@ -10,7 +10,7 @@ export async function signUpController(request: NextRequest) {
     const service = new AuthService(routeClient.supabase);
     const data = await service.signUp({
       ...body,
-      emailRedirectTo: `${request.nextUrl.origin}/protected`,
+      emailRedirectTo: `${request.nextUrl.origin}/dashboard`,
     });
 
     return successResponse(data, { status: 201 });

@@ -2,10 +2,10 @@ import { UpdatePasswordForm } from "@/components/update-password-form";
 
 export default function Page() {
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
-      <div className="w-full max-w-sm">
+    <main className="mx-auto flex min-h-screen w-full max-w-7xl justify-center px-4 pt-10 md:px-6 md:pt-16">
+      <div className="w-full max-w-xl">
         <UpdatePasswordForm />
       </div>
-    </div>
+    </main>
   );
 }

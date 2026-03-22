@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import { PublicHeader } from "@/components/public-header";
 
-export default function PublicLayout({ children }: { children: ReactNode }) {
+export default function AuthLayout({ children }: { children: ReactNode }) {
   return (
     <div className="min-h-screen">
       <PublicHeader />

@@ -13,7 +13,10 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
-import { useState } from "react";
+import { usePathname } from "next/navigation";
+import { useEffect, useState } from "react";
+
+const RESEND_DELAY_SECONDS = 60;
 
 export function ForgotPasswordForm({
   className,
@@ -23,9 +26,30 @@ export function ForgotPasswordForm({
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [resendCooldown, setResendCooldown] = useState(0);
+  const pathname = usePathname();
 
-  const handleForgotPassword = async (e: React.FormEvent) => {
-    e.preventDefault();
+  useEffect(() => {
+    setEmail("");
+    setError(null);
+    setSuccess(false);
+    setIsLoading(false);
+    setResendCooldown(0);
+  }, [pathname]);
+
+  useEffect(() => {
+    if (resendCooldown <= 0) {
+      return;
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      setResendCooldown((current) => current - 1);
+    }, 1000);
+
+    return () => window.clearTimeout(timeoutId);
+  }, [resendCooldown]);
+
+  const sendResetEmail = async () => {
     const supabase = createClient();
     setIsLoading(true);
     setError(null);
@@ -37,12 +61,33 @@ export function ForgotPasswordForm({
       });
       if (error) throw error;
       setSuccess(true);
+      setResendCooldown(RESEND_DELAY_SECONDS);
     } catch (error: unknown) {
       setError(error instanceof Error ? error.message : "An error occurred");
     } finally {
       setIsLoading(false);
     }
   };
+
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    await sendResetEmail();
+  };
+
+  const handleResend = async () => {
+    if (resendCooldown > 0 || isLoading) {
+      return;
+    }
+
+    await sendResetEmail();
+  };
+
+  const resendLabel =
+    resendCooldown > 0
+      ? `Resend in ${Math.floor(resendCooldown / 60)}:${String(
+          resendCooldown % 60,
+        ).padStart(2, "0")}`
+      : "Resend";
 
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
@@ -57,6 +102,29 @@ export function ForgotPasswordForm({
               If you registered using your email and password, you will receive
               a password reset email.
             </p>
+            {error ? <p className="mt-4 text-sm text-red-500">{error}</p> : null}
+            <div className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
+              <span>Didn&apos;t receive the email?</span>
+              <Button
+                type="button"
+                variant="link"
+                size="sm"
+                className="h-auto px-0 py-0"
+                disabled={resendCooldown > 0 || isLoading}
+                onClick={handleResend}
+              >
+                {isLoading ? "Sending..." : resendLabel}
+              </Button>
+            </div>
+            <div className="mt-4 text-center text-sm">
+              Go back to{" "}
+              <Link
+                href="/login"
+                className="underline underline-offset-4"
+              >
+                Login
+              </Link>
+            </div>
           </CardContent>
         </Card>
       ) : (

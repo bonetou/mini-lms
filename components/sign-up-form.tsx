@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -33,8 +33,19 @@ export function SignUpForm({
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const pathname = usePathname();
   const router = useRouter();
   const signUpMutation = useSignUpMutation();
+
+  useEffect(() => {
+    setFirstName("");
+    setLastName("");
+    setEmail("");
+    setPassword("");
+    setRepeatPassword("");
+    setError(null);
+    setFieldErrors({});
+  }, [pathname]);
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();

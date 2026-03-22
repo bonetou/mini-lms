@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { usePathname } from "next/navigation";
 import {
   ApiClientError,
   getApiErrorMessage,
@@ -37,14 +38,22 @@ export function ConsultationForm({
   onSubmit,
   isSubmitting = false,
 }: ConsultationFormProps) {
-  const [reason, setReason] = useState(initialValues?.reason ?? "");
-  const [scheduledAt, setScheduledAt] = useState(
-    initialValues?.scheduledAt
-      ? toDateTimeInputValue(initialValues.scheduledAt)
-      : "",
-  );
+  const pathname = usePathname();
+  const [reason, setReason] = useState("");
+  const [scheduledAt, setScheduledAt] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+
+  useEffect(() => {
+    setReason(initialValues?.reason ?? "");
+    setScheduledAt(
+      initialValues?.scheduledAt
+        ? toDateTimeInputValue(initialValues.scheduledAt)
+        : "",
+    );
+    setError(null);
+    setFieldErrors({});
+  }, [initialValues?.reason, initialValues?.scheduledAt, pathname]);
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();

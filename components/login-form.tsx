@@ -1,8 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -30,10 +30,18 @@ export function LoginForm({
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
+  const pathname = usePathname();
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginMutation = useLoginMutation();
   const registered = searchParams.get("registered") === "1";
+
+  useEffect(() => {
+    setEmail("");
+    setPassword("");
+    setError(null);
+    setFieldErrors({});
+  }, [pathname, registered]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

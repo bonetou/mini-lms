@@ -3,7 +3,6 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ReactNode } from "react";
-import { Button } from "@/components/ui/button";
 import { LogoutButton } from "@/components/logout-button";
 import { cn } from "@/lib/utils";
 import { useMeQuery } from "@/lib/query/auth";
@@ -23,10 +22,11 @@ export function AppShell({
 }: AppShellProps) {
   const pathname = usePathname();
   const meQuery = useMeQuery();
-  const name =
-    meQuery.data?.profile?.firstName ??
-    meQuery.data?.user.email ??
-    "Member";
+  const firstName = meQuery.data?.profile?.firstName?.trim() ?? "";
+  const lastName = meQuery.data?.profile?.lastName?.trim() ?? "";
+  const fullName = [firstName, lastName].filter(Boolean).join(" ");
+  const email = meQuery.data?.profile?.email ?? meQuery.data?.user.email ?? "";
+  const displayName = fullName || "Member";
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -45,8 +45,12 @@ export function AppShell({
 
             <nav className="mt-10 flex flex-col gap-2">
               {navItems.map((item) => {
-                const isActive =
-                  pathname === item.href || pathname.startsWith(`${item.href}/`);
+                const isExactMatch = pathname === item.href;
+                const isNestedMatch =
+                  item.href !== "/dashboard" && item.href !== "/admin"
+                    ? pathname.startsWith(`${item.href}/`)
+                    : false;
+                const isActive = isExactMatch || isNestedMatch;
 
                 return (
                   <Link
@@ -65,15 +69,15 @@ export function AppShell({
               })}
             </nav>
 
-            <div className="mt-auto rounded-[1.5rem] bg-brand-white/10 p-4">
+            <div className="mt-auto rounded-[1rem] p-0">
               <p className="text-xs uppercase tracking-[0.28em] text-brand-cream/70">
                 Signed in
               </p>
-              <p className="mt-2 text-lg font-semibold text-white">{name}</p>
+              <p className="mt-2 text-lg font-semibold text-white">{displayName}</p>
+              {email ? (
+                <p className="mt-1 text-sm text-brand-cream/75">{email}</p>
+              ) : null}
               <div className="mt-4 flex flex-wrap gap-3">
-                <Button asChild variant="outline" className="border-brand-white/20 bg-transparent text-white hover:bg-brand-white/10 hover:text-white">
-                  <Link href="/">Public Home</Link>
-                </Button>
                 <LogoutButton />
               </div>
             </div>

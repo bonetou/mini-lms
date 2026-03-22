@@ -16,6 +16,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             status: "",
             scheduledFrom: "",
             scheduledTo: "",
+            search: "",
             page: 1,
             pageSize: 10,
             studentId: "",
@@ -37,7 +38,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           >
             <AppShell
               title="Admin Console"
-              subtitle="Review all consultation activity, inspect audit history, and monitor student scheduling at a glance."
+              subtitle=""
               navItems={[
                 { href: "/admin", label: "Overview" },
                 { href: "/admin/consultations", label: "Consultations" },

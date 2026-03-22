@@ -10,6 +10,7 @@ export default function AdminDashboardPage() {
     status: "",
     scheduledFrom: "",
     scheduledTo: "",
+    search: "",
     page: 1,
     pageSize: 5,
     studentId: "",
@@ -24,38 +25,19 @@ export default function AdminDashboardPage() {
     );
   }
 
-  const items = consultationsQuery.data?.items ?? [];
-  const completedCount = items.filter((item) => item.isCompleted).length;
-
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin"
-        title="Consultation oversight"
-        description="Use this dashboard to monitor how consultation records are progressing across students."
+        eyebrow=""
+        title="Dashboard"
+        description="Analytics details"
       />
       <section className="grid gap-6 md:grid-cols-3">
         <Card>
           <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">Visible consultations</p>
+            <p className="text-sm text-muted-foreground">Consultations</p>
             <p className="mt-2 text-4xl font-semibold text-foreground">
               {consultationsQuery.data?.total ?? 0}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-6">
-            <p className="text-sm text-muted-foreground">Completed in current slice</p>
-            <p className="mt-2 text-4xl font-semibold text-foreground">
-              {completedCount}
-            </p>
-          </CardContent>
-        </Card>
-        <Card className="bg-brand-blue text-white">
-          <CardContent className="p-6">
-            <p className="text-sm text-white/80">Read-only policy</p>
-            <p className="mt-2 text-lg font-semibold">
-              Admin access is intentionally observational in the client.
             </p>
           </CardContent>
         </Card>

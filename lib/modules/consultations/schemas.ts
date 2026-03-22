@@ -21,6 +21,11 @@ const optionalDateTimeSchema = z
     message: "Invalid datetime value",
   });
 
+const optionalSearchSchema = z
+  .string()
+  .optional()
+  .transform((value) => value?.trim() || undefined);
+
 export const consultationParamsSchema = z.object({
   id: z.uuid(),
 });
@@ -38,6 +43,7 @@ export const consultationListQuerySchema = z.object({
 export const adminConsultationListQuerySchema = z.object({
   status: consultationStatusSchema.optional(),
   studentId: z.uuid().optional(),
+  search: optionalSearchSchema,
   scheduledFrom: optionalDateTimeSchema,
   scheduledTo: optionalDateTimeSchema,
   page: optionalIntSchema.default(1),

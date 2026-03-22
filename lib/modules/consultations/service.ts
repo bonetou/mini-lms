@@ -40,6 +40,7 @@ export class ConsultationsService {
       }
 
       const adminFilters: AdminConsultationListQuery = {
+        search: undefined,
         status: filters.status,
         studentId: filters.studentId,
         scheduledFrom: filters.scheduledFrom,

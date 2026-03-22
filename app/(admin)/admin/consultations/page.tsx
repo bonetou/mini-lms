@@ -23,6 +23,7 @@ export default function AdminConsultationsPage() {
 
   const consultationsQuery = useAdminConsultationsQuery({
     ...filters,
+    search: filters.search ?? "",
     studentId: filters.studentId ?? "",
   });
   const hasNextPage =
@@ -33,12 +34,21 @@ export default function AdminConsultationsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin Consultations"
-        title="All consultation records"
-        description="Filter by student, status, or date range to inspect the platform-wide consultation queue."
+        eyebrow=""
+        title="Consultations"
+        description="Filter by user, student ID, status, or date range."
       />
 
-      <section className="grid gap-4 rounded-[1.75rem] border border-border bg-card p-6 shadow-panel md:grid-cols-5">
+      <section className="grid gap-4 rounded-[1.75rem] border border-border bg-card p-6 shadow-panel md:grid-cols-6">
+        <div className="grid gap-2 md:col-span-2">
+          <Label htmlFor="admin-search">User</Label>
+          <Input
+            id="admin-search"
+            value={filters.search ?? ""}
+            onChange={(event) => updateFilters({ search: event.target.value })}
+            placeholder="Search email, first name, or last name"
+          />
+        </div>
         <div className="grid gap-2">
           <Label htmlFor="admin-status">Status</Label>
           <select

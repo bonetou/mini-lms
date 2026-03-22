@@ -78,6 +78,7 @@ export type ConsultationFilters = {
 
 export type AdminConsultationFilters = ConsultationFilters & {
   studentId: string;
+  search: string;
 };
 
 export type TablePreferences = {

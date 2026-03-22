@@ -28,9 +28,9 @@ export default function AdminConsultationDetailPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow="Admin Detail"
-        title={`${consultation.studentFirstName} ${consultation.studentLastName}`}
-        description={consultation.reason}
+        eyebrow=""
+        title={`Consultation Details`}
+        description="Check"
       />
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <Card>

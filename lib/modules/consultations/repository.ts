@@ -235,6 +235,35 @@ export class ConsultationsAdminRepository {
   private readonly supabase = createAdminClient();
 
   async listAll(filters: AdminConsultationListQuery) {
+    let matchedStudentIds: string[] | null = null;
+
+    if (filters.search) {
+      const searchTerm = `%${filters.search}%`;
+      const profilesResult = await this.supabase
+        .from("profiles")
+        .select("id")
+        .or(
+          [
+            `email.ilike.${searchTerm}`,
+            `first_name.ilike.${searchTerm}`,
+            `last_name.ilike.${searchTerm}`,
+          ].join(","),
+        );
+
+      if (profilesResult.error) {
+        throw profilesResult.error;
+      }
+
+      matchedStudentIds = (profilesResult.data ?? []).map((profile) => profile.id);
+
+      if (matchedStudentIds.length === 0) {
+        return {
+          rows: [],
+          count: 0,
+        } satisfies ConsultationListResult;
+      }
+    }
+
     const from = (filters.page - 1) * filters.pageSize;
     const to = from + filters.pageSize - 1;
     const scheduledFromFilter = normalizeScheduledFromDate(filters.scheduledFrom);
@@ -251,6 +280,10 @@ export class ConsultationsAdminRepository {
 
     if (filters.studentId) {
       query = query.eq("student_id", filters.studentId);
+    }
+
+    if (matchedStudentIds) {
+      query = query.in("student_id", matchedStudentIds);
     }
 
     if (scheduledFromFilter) {

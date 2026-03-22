@@ -10,16 +10,19 @@ import {
 } from "react";
 import { ConsultationFilters } from "@/lib/types/frontend";
 
+type ExtendedConsultationFilters = ConsultationFilters & {
+  studentId?: string;
+  search?: string;
+};
+
 type ConsultationFiltersContextValue = {
-  filters: ConsultationFilters & { studentId?: string };
+  filters: ExtendedConsultationFilters;
   setFilters: (
     next:
-      | (ConsultationFilters & { studentId?: string })
-      | ((
-          current: ConsultationFilters & { studentId?: string },
-        ) => ConsultationFilters & { studentId?: string }),
+      | ExtendedConsultationFilters
+      | ((current: ExtendedConsultationFilters) => ExtendedConsultationFilters),
   ) => void;
-  updateFilters: (patch: Partial<ConsultationFilters & { studentId?: string }>) => void;
+  updateFilters: (patch: Partial<ExtendedConsultationFilters>) => void;
   resetFilters: () => void;
 };
 
@@ -28,7 +31,7 @@ const ConsultationFiltersContext =
 
 type ConsultationFiltersProviderProps = {
   children: ReactNode;
-  initialFilters: ConsultationFilters & { studentId?: string };
+  initialFilters: ExtendedConsultationFilters;
   storageKey: string;
 };
 
@@ -38,7 +41,7 @@ export function ConsultationFiltersProvider({
   storageKey,
 }: ConsultationFiltersProviderProps) {
   const [filters, setFiltersState] =
-    useState<ConsultationFilters & { studentId?: string }>(initialFilters);
+    useState<ExtendedConsultationFilters>(initialFilters);
 
   useEffect(() => {
     const raw = window.localStorage.getItem(storageKey);
@@ -48,9 +51,7 @@ export function ConsultationFiltersProvider({
     }
 
     try {
-      const persisted = JSON.parse(raw) as Partial<
-        ConsultationFilters & { studentId?: string }
-      >;
+      const persisted = JSON.parse(raw) as Partial<ExtendedConsultationFilters>;
       setFiltersState((current) => ({ ...current, ...persisted }));
     } catch {
       window.localStorage.removeItem(storageKey);

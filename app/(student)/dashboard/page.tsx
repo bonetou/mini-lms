@@ -39,7 +39,7 @@ export default function DashboardPage() {
       <PageHeader
         eyebrow="Dashboard"
         title={`Welcome back, ${firstName}`}
-        description="Keep your consultations moving and stay on top of the next important support session."
+        description=""
         actions={
           <Button asChild>
             <Link href="/dashboard/consultations/new">
@@ -71,21 +71,6 @@ export default function DashboardPage() {
               </p>
           </CardContent>
         </Card>
-        <Card className="bg-brand-blue text-white">
-          <CardContent className="p-6">
-            <p className="text-sm text-white/80">Quick action</p>
-            <h2 className="mt-2 font-display text-3xl text-white">
-              Need support soon?
-            </h2>
-            <Button
-              asChild
-              variant="outline"
-              className="mt-6 border-white/20 bg-transparent text-white hover:bg-white/10 hover:text-white"
-            >
-              <Link href="/dashboard/consultations/new">Create a request</Link>
-            </Button>
-          </CardContent>
-        </Card>
       </section>
 
       <section className="space-y-4">
@@ -113,7 +98,7 @@ export default function DashboardPage() {
         ) : (
           <EmptyState
             title="No consultations yet"
-            description="Create your first consultation request to get support booked into the system."
+            description=""
             actionHref="/dashboard/consultations/new"
             actionLabel="Book consultation"
           />

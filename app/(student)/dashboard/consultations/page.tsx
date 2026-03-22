@@ -34,8 +34,8 @@ export default function StudentConsultationsPage() {
     <div className="space-y-6">
       <PageHeader
         eyebrow="Student Consultations"
-        title="Your consultation schedule"
-        description="Filter your bookings, open consultation details, and keep everything on track from one view."
+        title="Your consultations"
+        description="View and manage your upcoming consultations."
         actions={
           <Button asChild>
             <Link href="/dashboard/consultations/new">

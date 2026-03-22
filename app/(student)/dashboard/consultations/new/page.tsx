@@ -14,11 +14,11 @@ export default function NewConsultationPage() {
       <PageHeader
         eyebrow="Create"
         title="Book a new consultation"
-        description="Capture the reason clearly and pick a time that works for your support session."
+        description=""
       />
       <ConsultationForm
         title="New consultation"
-        description="This creates a scheduled consultation tied to your profile snapshot."
+        description="Fill in the details below to request a new consultation."
         submitLabel="Create consultation"
         isSubmitting={createMutation.isPending}
         onSubmit={async (values) => {

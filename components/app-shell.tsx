@@ -27,6 +27,11 @@ export function AppShell({
   const fullName = [firstName, lastName].filter(Boolean).join(" ");
   const email = meQuery.data?.profile?.email ?? meQuery.data?.user.email ?? "";
   const displayName = fullName || "Member";
+  const exactMatch = navItems.find((item) => item.href === pathname)?.href;
+  const nestedMatch = [...navItems]
+    .sort((left, right) => right.href.length - left.href.length)
+    .find((item) => pathname.startsWith(`${item.href}/`))?.href;
+  const activeHref = exactMatch ?? nestedMatch ?? null;
 
   return (
     <div className="min-h-screen bg-transparent">
@@ -45,12 +50,7 @@ export function AppShell({
 
             <nav className="mt-10 flex flex-col gap-2">
               {navItems.map((item) => {
-                const isExactMatch = pathname === item.href;
-                const isNestedMatch =
-                  item.href !== "/dashboard" && item.href !== "/admin"
-                    ? pathname.startsWith(`${item.href}/`)
-                    : false;
-                const isActive = isExactMatch || isNestedMatch;
+                const isActive = item.href === activeHref;
 
                 return (
                   <Link

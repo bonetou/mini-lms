@@ -30,9 +30,9 @@ export default function StudentLayout({ children }: { children: ReactNode }) {
           >
             <AppShell
               title="Student Portal"
-              subtitle="Manage your upcoming consultations, track changes, and keep support sessions organised."
+              subtitle=""
               navItems={[
-                { href: "/dashboard", label: "Overview" },
+                { href: "/dashboard", label: "Dashboard" },
                 { href: "/dashboard/consultations", label: "Consultations" },
                 { href: "/dashboard/consultations/new", label: "Book new" },
               ]}

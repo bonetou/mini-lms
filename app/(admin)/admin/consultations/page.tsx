@@ -8,12 +8,14 @@ import { PageHeader } from "@/components/page-header";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useConsultationFilters } from "@/lib/contexts/consultation-filters-context";
+import { useDebouncedValue } from "@/lib/hooks/use-debounced-value";
 import { useTablePreferences } from "@/lib/contexts/table-preferences-context";
 import { useAdminConsultationsQuery } from "@/lib/query/consultations";
 
 export default function AdminConsultationsPage() {
   const { filters, updateFilters, setFilters } = useConsultationFilters();
   const { preferences, setPageSize } = useTablePreferences();
+  const debouncedSearch = useDebouncedValue(filters.search ?? "", 350);
 
   useEffect(() => {
     if (filters.pageSize !== preferences.pageSize) {
@@ -23,7 +25,7 @@ export default function AdminConsultationsPage() {
 
   const consultationsQuery = useAdminConsultationsQuery({
     ...filters,
-    search: filters.search ?? "",
+    search: debouncedSearch,
     studentId: filters.studentId ?? "",
   });
   const hasNextPage =
@@ -34,7 +36,7 @@ export default function AdminConsultationsPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow=""
+        eyebrow="List of consultations"
         title="Consultations"
         description="Filter by user, student ID, status, or date range."
       />

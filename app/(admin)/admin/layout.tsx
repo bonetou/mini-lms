@@ -40,7 +40,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
               title="Admin Console"
               subtitle=""
               navItems={[
-                { href: "/admin", label: "Overview" },
+                { href: "/admin", label: "Dashboard" },
                 { href: "/admin/consultations", label: "Consultations" },
               ]}
             >

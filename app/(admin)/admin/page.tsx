@@ -28,7 +28,7 @@ export default function AdminDashboardPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        eyebrow=""
+        eyebrow="Admin Dashboard"
         title="Dashboard"
         description="Analytics details"
       />

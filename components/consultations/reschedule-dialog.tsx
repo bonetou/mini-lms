@@ -1,7 +1,11 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApiClientError } from "@/lib/api/client";
+import {
+  ApiClientError,
+  getApiErrorMessage,
+  getValidationErrors,
+} from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,6 +31,7 @@ export function RescheduleDialog({
 }: RescheduleDialogProps) {
   const [scheduledAt, setScheduledAt] = useState(toDateTimeInputValue(initialValue));
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     setScheduledAt(toDateTimeInputValue(initialValue));
@@ -39,13 +44,16 @@ export function RescheduleDialog({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     try {
       await onSubmit(dateTimeInputToIso(scheduledAt));
       onClose();
     } catch (submitError) {
       if (submitError instanceof ApiClientError) {
-        setError(submitError.message);
+        const validationErrors = getValidationErrors(submitError);
+        setFieldErrors(validationErrors.fieldErrors);
+        setError(getApiErrorMessage(submitError));
         return;
       }
 
@@ -71,7 +79,13 @@ export function RescheduleDialog({
               required
               value={scheduledAt}
               onChange={(event) => setScheduledAt(event.target.value)}
+              className={fieldErrors.scheduledAt ? "border-destructive" : undefined}
             />
+            {fieldErrors.scheduledAt?.map((message) => (
+              <p key={message} className="text-sm text-destructive">
+                {message}
+              </p>
+            ))}
           </div>
           {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
           <div className="mt-6 flex justify-end gap-3">

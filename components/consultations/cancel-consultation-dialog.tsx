@@ -1,9 +1,14 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ApiClientError } from "@/lib/api/client";
+import {
+  ApiClientError,
+  getApiErrorMessage,
+  getValidationErrors,
+} from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
+import { cn } from "@/lib/utils";
 
 type CancelConsultationDialogProps = {
   isOpen: boolean;
@@ -20,11 +25,13 @@ export function CancelConsultationDialog({
 }: CancelConsultationDialogProps) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   useEffect(() => {
     if (isOpen) {
       setReason("");
       setError(null);
+      setFieldErrors({});
     }
   }, [isOpen]);
 
@@ -35,13 +42,16 @@ export function CancelConsultationDialog({
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     try {
       await onSubmit(reason);
       onClose();
     } catch (submitError) {
       if (submitError instanceof ApiClientError) {
-        setError(submitError.message);
+        const validationErrors = getValidationErrors(submitError);
+        setFieldErrors(validationErrors.fieldErrors);
+        setError(getApiErrorMessage(submitError));
         return;
       }
 
@@ -68,9 +78,17 @@ export function CancelConsultationDialog({
               id="cancellation-reason"
               value={reason}
               onChange={(event) => setReason(event.target.value)}
-              className="min-h-28 rounded-3xl border border-input bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30"
+              className={cn(
+                "min-h-28 rounded-3xl border border-input bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30",
+                fieldErrors.cancellationReason ? "border-destructive" : "",
+              )}
               placeholder="Share the context for this cancellation."
             />
+            {fieldErrors.cancellationReason?.map((message) => (
+              <p key={message} className="text-sm text-destructive">
+                {message}
+              </p>
+            ))}
           </div>
           {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
           <div className="mt-6 flex justify-end gap-3">

@@ -1,7 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ApiClientError } from "@/lib/api/client";
+import {
+  ApiClientError,
+  getApiErrorMessage,
+  getValidationErrors,
+} from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -9,6 +13,7 @@ import {
   dateTimeInputToIso,
   toDateTimeInputValue,
 } from "@/lib/dates";
+import { cn } from "@/lib/utils";
 
 type ConsultationFormValues = {
   reason: string;
@@ -39,10 +44,12 @@ export function ConsultationForm({
       : "",
   );
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     try {
       await onSubmit({
@@ -51,7 +58,9 @@ export function ConsultationForm({
       });
     } catch (submitError) {
       if (submitError instanceof ApiClientError) {
-        setError(submitError.message);
+        const validationErrors = getValidationErrors(submitError);
+        setFieldErrors(validationErrors.fieldErrors);
+        setError(getApiErrorMessage(submitError));
         return;
       }
 
@@ -81,7 +90,13 @@ export function ConsultationForm({
             required
             value={scheduledAt}
             onChange={(event) => setScheduledAt(event.target.value)}
+            className={fieldErrors.scheduledAt ? "border-destructive" : undefined}
           />
+          {fieldErrors.scheduledAt?.map((message) => (
+            <p key={message} className="text-sm text-destructive">
+              {message}
+            </p>
+          ))}
         </div>
         <div className="grid gap-2">
           <Label htmlFor="reason">Reason</Label>
@@ -90,9 +105,17 @@ export function ConsultationForm({
             required
             value={reason}
             onChange={(event) => setReason(event.target.value)}
-            className="min-h-32 rounded-3xl border border-input bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30"
+            className={cn(
+              "min-h-32 rounded-3xl border border-input bg-background px-4 py-3 text-sm outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-ring/30",
+              fieldErrors.reason ? "border-destructive" : "",
+            )}
             placeholder="What should the consultation focus on?"
           />
+          {fieldErrors.reason?.map((message) => (
+            <p key={message} className="text-sm text-destructive">
+              {message}
+            </p>
+          ))}
         </div>
       </div>
 

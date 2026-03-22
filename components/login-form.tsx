@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ApiClientError } from "@/lib/api/client";
+import {
+  ApiClientError,
+  getApiErrorMessage,
+  getValidationErrors,
+} from "@/lib/api/client";
 import { useLoginMutation } from "@/lib/query/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -25,6 +29,7 @@ export function LoginForm({
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const router = useRouter();
   const searchParams = useSearchParams();
   const loginMutation = useLoginMutation();
@@ -33,6 +38,7 @@ export function LoginForm({
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     try {
       const result = await loginMutation.mutateAsync({ email, password });
@@ -42,7 +48,9 @@ export function LoginForm({
       router.replace(destination);
     } catch (error: unknown) {
       if (error instanceof ApiClientError) {
-        setError(error.message);
+        const validationErrors = getValidationErrors(error);
+        setFieldErrors(validationErrors.fieldErrors);
+        setError(getApiErrorMessage(error));
       } else {
         setError(error instanceof Error ? error.message : "An error occurred");
       }
@@ -74,11 +82,17 @@ export function LoginForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="mary@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className={fieldErrors.email ? "border-destructive" : undefined}
                 />
+                {fieldErrors.email?.map((message) => (
+                  <p key={message} className="text-sm text-destructive">
+                    {message}
+                  </p>
+                ))}
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
@@ -96,7 +110,13 @@ export function LoginForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className={fieldErrors.password ? "border-destructive" : undefined}
                 />
+                {fieldErrors.password?.map((message) => (
+                  <p key={message} className="text-sm text-destructive">
+                    {message}
+                  </p>
+                ))}
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button

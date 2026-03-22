@@ -5,7 +5,11 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { ApiClientError } from "@/lib/api/client";
+import {
+  ApiClientError,
+  getApiErrorMessage,
+  getValidationErrors,
+} from "@/lib/api/client";
 import { useSignUpMutation } from "@/lib/query/auth";
 import { Button } from "@/components/ui/button";
 import {
@@ -28,14 +32,19 @@ export function SignUpForm({
   const [password, setPassword] = useState("");
   const [repeatPassword, setRepeatPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string[]>>({});
   const router = useRouter();
   const signUpMutation = useSignUpMutation();
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setFieldErrors({});
 
     if (password !== repeatPassword) {
+      setFieldErrors({
+        repeatPassword: ["Passwords do not match"],
+      });
       setError("Passwords do not match");
       return;
     }
@@ -50,7 +59,9 @@ export function SignUpForm({
       router.push("/login?registered=1");
     } catch (error: unknown) {
       if (error instanceof ApiClientError) {
-        setError(error.message);
+        const validationErrors = getValidationErrors(error);
+        setFieldErrors(validationErrors.fieldErrors);
+        setError(getApiErrorMessage(error));
       } else {
         setError(error instanceof Error ? error.message : "An error occurred");
       }
@@ -78,7 +89,13 @@ export function SignUpForm({
                     required
                     value={firstName}
                     onChange={(e) => setFirstName(e.target.value)}
+                    className={fieldErrors.firstName ? "border-destructive" : undefined}
                   />
+                  {fieldErrors.firstName?.map((message) => (
+                    <p key={message} className="text-sm text-destructive">
+                      {message}
+                    </p>
+                  ))}
                 </div>
                 <div className="grid gap-2">
                   <Label htmlFor="last-name">Last name</Label>
@@ -87,7 +104,13 @@ export function SignUpForm({
                     required
                     value={lastName}
                     onChange={(e) => setLastName(e.target.value)}
+                    className={fieldErrors.lastName ? "border-destructive" : undefined}
                   />
+                  {fieldErrors.lastName?.map((message) => (
+                    <p key={message} className="text-sm text-destructive">
+                      {message}
+                    </p>
+                  ))}
                 </div>
               </div>
               <div className="grid gap-2">
@@ -95,11 +118,17 @@ export function SignUpForm({
                 <Input
                   id="email"
                   type="email"
-                  placeholder="m@example.com"
+                  placeholder="john@example.com"
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
+                  className={fieldErrors.email ? "border-destructive" : undefined}
                 />
+                {fieldErrors.email?.map((message) => (
+                  <p key={message} className="text-sm text-destructive">
+                    {message}
+                  </p>
+                ))}
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
@@ -111,7 +140,13 @@ export function SignUpForm({
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
+                  className={fieldErrors.password ? "border-destructive" : undefined}
                 />
+                {fieldErrors.password?.map((message) => (
+                  <p key={message} className="text-sm text-destructive">
+                    {message}
+                  </p>
+                ))}
               </div>
               <div className="grid gap-2">
                 <div className="flex items-center">
@@ -123,7 +158,13 @@ export function SignUpForm({
                   required
                   value={repeatPassword}
                   onChange={(e) => setRepeatPassword(e.target.value)}
+                  className={fieldErrors.repeatPassword ? "border-destructive" : undefined}
                 />
+                {fieldErrors.repeatPassword?.map((message) => (
+                  <p key={message} className="text-sm text-destructive">
+                    {message}
+                  </p>
+                ))}
               </div>
               {error && <p className="text-sm text-red-500">{error}</p>}
               <Button

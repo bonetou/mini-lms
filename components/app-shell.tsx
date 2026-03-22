@@ -30,7 +30,7 @@ export function AppShell({
 
   return (
     <div className="min-h-screen bg-transparent">
-      <div className="mx-auto flex min-h-screen w-full max-w-7xl flex-col gap-6 px-4 py-4 lg:flex-row lg:px-6">
+      <div className="mx-auto flex min-h-screen w-full flex-col gap-4 px-2 py-2 lg:flex-row lg:px-3">
         <aside className="rounded-[2rem] bg-secondary p-6 text-secondary-foreground shadow-panel lg:sticky lg:top-4 lg:h-[calc(100vh-2rem)] lg:w-80">
           <div className="flex h-full flex-col">
             <div>

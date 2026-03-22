@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiClientError } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -20,6 +20,13 @@ export function CancelConsultationDialog({
 }: CancelConsultationDialogProps) {
   const [reason, setReason] = useState("");
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen) {
+      setReason("");
+      setError(null);
+    }
+  }, [isOpen]);
 
   if (!isOpen) {
     return null;

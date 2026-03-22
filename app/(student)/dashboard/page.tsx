@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page-header";
 import { ConsultationCard } from "@/components/consultations/consultation-card";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/dates";
 import { useMeQuery } from "@/lib/query/auth";
 import { useMyConsultationsQuery } from "@/lib/query/consultations";
 
@@ -63,11 +64,11 @@ export default function DashboardPage() {
           <CardContent className="p-6">
             <CalendarClock className="h-5 w-5 text-brand-blue" />
             <p className="mt-4 text-sm text-muted-foreground">Next session</p>
-            <p className="mt-2 text-lg font-semibold text-foreground">
-              {upcoming
-                ? new Date(upcoming.scheduledAt).toLocaleString()
-                : "Nothing scheduled yet"}
-            </p>
+              <p className="mt-2 text-lg font-semibold text-foreground">
+                {upcoming
+                  ? formatDateTime(upcoming.scheduledAt)
+                  : "Nothing scheduled yet"}
+              </p>
           </CardContent>
         </Card>
         <Card className="bg-brand-blue text-white">

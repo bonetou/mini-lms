@@ -5,6 +5,10 @@ import { ApiClientError } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  dateTimeInputToIso,
+  toDateTimeInputValue,
+} from "@/lib/dates";
 
 type ConsultationFormValues = {
   reason: string;
@@ -30,7 +34,9 @@ export function ConsultationForm({
 }: ConsultationFormProps) {
   const [reason, setReason] = useState(initialValues?.reason ?? "");
   const [scheduledAt, setScheduledAt] = useState(
-    initialValues?.scheduledAt?.slice(0, 16) ?? "",
+    initialValues?.scheduledAt
+      ? toDateTimeInputValue(initialValues.scheduledAt)
+      : "",
   );
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +47,7 @@ export function ConsultationForm({
     try {
       await onSubmit({
         reason,
-        scheduledAt: new Date(scheduledAt).toISOString(),
+        scheduledAt: dateTimeInputToIso(scheduledAt),
       });
     } catch (submitError) {
       if (submitError instanceof ApiClientError) {

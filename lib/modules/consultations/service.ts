@@ -1,5 +1,6 @@
 import { ApiError } from "@/lib/api/errors";
 import { AuthContext } from "@/lib/api/auth-context";
+import { nowIso } from "@/lib/dates";
 import {
   AdminConsultationListQuery,
   ConsultationListQuery,
@@ -161,7 +162,7 @@ export class ConsultationsService {
     const updated = await this.repository.updateOwn(consultationId, context.user.id, {
       status: "CANCELLED",
       is_completed: false,
-      cancelled_at: new Date().toISOString(),
+      cancelled_at: nowIso(),
       cancellation_reason: input.cancellationReason ?? null,
     });
 

@@ -6,7 +6,15 @@ import { ApiClientError } from "@/lib/api/client";
 import { useMeQuery } from "@/lib/query/auth";
 import { LoadingState } from "@/components/loading-state";
 
-export function ProtectedRouteGuard({ children }: { children: ReactNode }) {
+type ProtectedRouteGuardProps = {
+  children: ReactNode;
+  redirectIfAdminTo?: string;
+};
+
+export function ProtectedRouteGuard({
+  children,
+  redirectIfAdminTo,
+}: ProtectedRouteGuardProps) {
   const router = useRouter();
   const meQuery = useMeQuery();
 
@@ -17,7 +25,11 @@ export function ProtectedRouteGuard({ children }: { children: ReactNode }) {
     ) {
       router.replace("/login");
     }
-  }, [meQuery.error, router]);
+
+    if (redirectIfAdminTo && meQuery.data?.isAdmin) {
+      router.replace(redirectIfAdminTo);
+    }
+  }, [meQuery.data?.isAdmin, meQuery.error, redirectIfAdminTo, router]);
 
   if (meQuery.isPending) {
     return (
@@ -45,6 +57,15 @@ export function ProtectedRouteGuard({ children }: { children: ReactNode }) {
       <LoadingState
         title="Unable to load account"
         description="Please refresh and try again."
+      />
+    );
+  }
+
+  if (redirectIfAdminTo && meQuery.data?.isAdmin) {
+    return (
+      <LoadingState
+        title="Redirecting"
+        description="Admin accounts are sent to the admin console instead of the student dashboard."
       />
     );
   }

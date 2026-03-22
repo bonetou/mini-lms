@@ -35,8 +35,11 @@ export function LoginForm({
     setError(null);
 
     try {
-      await loginMutation.mutateAsync({ email, password });
-      router.push("/dashboard");
+      const result = await loginMutation.mutateAsync({ email, password });
+      const destination = result.roles.includes("admin")
+        ? "/admin"
+        : "/dashboard";
+      router.replace(destination);
     } catch (error: unknown) {
       if (error instanceof ApiClientError) {
         setError(error.message);

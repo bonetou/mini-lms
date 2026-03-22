@@ -1,6 +1,10 @@
 import { SupabaseClient } from "@supabase/supabase-js";
 import { createAdminClient } from "@/lib/supabase/admin";
 import {
+  normalizeScheduledFromDate,
+  normalizeScheduledToDate,
+} from "@/lib/dates";
+import {
   AdminConsultationListQuery,
   ConsultationListQuery,
   ConsultationStatus,
@@ -96,6 +100,8 @@ export class ConsultationsRepository {
   async listOwn(studentId: string, filters: ConsultationListQuery) {
     const from = (filters.page - 1) * filters.pageSize;
     const to = from + filters.pageSize - 1;
+    const scheduledFromFilter = normalizeScheduledFromDate(filters.scheduledFrom);
+    const scheduledToFilter = normalizeScheduledToDate(filters.scheduledTo);
     let query = this.supabase
       .from("consultations")
       .select(consultationColumns, { count: "exact" })
@@ -107,12 +113,15 @@ export class ConsultationsRepository {
       query = query.eq("status", filters.status);
     }
 
-    if (filters.scheduledFrom) {
-      query = query.gte("scheduled_at", filters.scheduledFrom);
+    if (scheduledFromFilter) {
+      query = query.gte("scheduled_at", scheduledFromFilter);
     }
 
-    if (filters.scheduledTo) {
-      query = query.lte("scheduled_at", filters.scheduledTo);
+    if (scheduledToFilter) {
+      query =
+        scheduledToFilter.operator === "lt"
+          ? query.lt("scheduled_at", scheduledToFilter.value)
+          : query.lte("scheduled_at", scheduledToFilter.value);
     }
 
     const result = await query;
@@ -228,6 +237,8 @@ export class ConsultationsAdminRepository {
   async listAll(filters: AdminConsultationListQuery) {
     const from = (filters.page - 1) * filters.pageSize;
     const to = from + filters.pageSize - 1;
+    const scheduledFromFilter = normalizeScheduledFromDate(filters.scheduledFrom);
+    const scheduledToFilter = normalizeScheduledToDate(filters.scheduledTo);
     let query = this.supabase
       .from("consultations")
       .select(consultationColumns, { count: "exact" })
@@ -242,12 +253,15 @@ export class ConsultationsAdminRepository {
       query = query.eq("student_id", filters.studentId);
     }
 
-    if (filters.scheduledFrom) {
-      query = query.gte("scheduled_at", filters.scheduledFrom);
+    if (scheduledFromFilter) {
+      query = query.gte("scheduled_at", scheduledFromFilter);
     }
 
-    if (filters.scheduledTo) {
-      query = query.lte("scheduled_at", filters.scheduledTo);
+    if (scheduledToFilter) {
+      query =
+        scheduledToFilter.operator === "lt"
+          ? query.lt("scheduled_at", scheduledToFilter.value)
+          : query.lte("scheduled_at", scheduledToFilter.value);
     }
 
     const result = await query;

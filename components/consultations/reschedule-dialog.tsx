@@ -1,10 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ApiClientError } from "@/lib/api/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  dateTimeInputToIso,
+  toDateTimeInputValue,
+} from "@/lib/dates";
 
 type RescheduleDialogProps = {
   isOpen: boolean;
@@ -21,8 +25,12 @@ export function RescheduleDialog({
   onClose,
   onSubmit,
 }: RescheduleDialogProps) {
-  const [scheduledAt, setScheduledAt] = useState(initialValue.slice(0, 16));
+  const [scheduledAt, setScheduledAt] = useState(toDateTimeInputValue(initialValue));
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    setScheduledAt(toDateTimeInputValue(initialValue));
+  }, [initialValue]);
 
   if (!isOpen) {
     return null;
@@ -33,7 +41,7 @@ export function RescheduleDialog({
     setError(null);
 
     try {
-      await onSubmit(new Date(scheduledAt).toISOString());
+      await onSubmit(dateTimeInputToIso(scheduledAt));
       onClose();
     } catch (submitError) {
       if (submitError instanceof ApiClientError) {

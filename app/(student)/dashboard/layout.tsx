@@ -9,7 +9,7 @@ import { TablePreferencesProvider } from "@/lib/contexts/table-preferences-conte
 
 export default function StudentLayout({ children }: { children: ReactNode }) {
   return (
-    <ProtectedRouteGuard>
+    <ProtectedRouteGuard redirectIfAdminTo="/admin">
       <BookingModalProvider>
         <ConsultationFiltersProvider
           initialFilters={{

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { DataTable, DataTableColumn } from "@/components/data-table";
 import { StatusBadge } from "@/components/status-badge";
+import { formatDateOnly, formatDateTime } from "@/lib/dates";
 import { ConsultationSummary } from "@/lib/types/frontend";
 
 type ConsultationTableProps = {
@@ -40,7 +41,7 @@ export function ConsultationTable({
         <div>
           <p className="font-medium text-foreground">{consultation.reason}</p>
           <p className="mt-1 text-xs text-muted-foreground">
-            Created {new Date(consultation.createdAt).toLocaleDateString()}
+            Created {formatDateOnly(consultation.createdAt)}
           </p>
         </div>
       ),
@@ -48,9 +49,7 @@ export function ConsultationTable({
     {
       id: "scheduledAt",
       header: "Scheduled",
-      cell: (consultation) => (
-        <span>{new Date(consultation.scheduledAt).toLocaleString()}</span>
-      ),
+      cell: (consultation) => <span>{formatDateTime(consultation.scheduledAt)}</span>,
     },
     {
       id: "status",

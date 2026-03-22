@@ -5,6 +5,7 @@ import { LoadingState } from "@/components/loading-state";
 import { PageHeader } from "@/components/page-header";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/dates";
 import { useConsultationQuery } from "@/lib/query/consultations";
 
 export default function AdminConsultationDetailPage() {
@@ -39,11 +40,11 @@ export default function AdminConsultationDetailPage() {
               <StatusBadge status={consultation.status} />
             </div>
             <div className="rounded-[1.5rem] bg-brand-cream p-5">
-              <p className="text-sm text-muted-foreground">Scheduled time</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {new Date(consultation.scheduledAt).toLocaleString()}
-              </p>
-            </div>
+                <p className="text-sm text-muted-foreground">Scheduled time</p>
+                <p className="mt-2 text-lg font-semibold text-foreground">
+                  {formatDateTime(consultation.scheduledAt)}
+                </p>
+              </div>
             <div className="rounded-[1.5rem] bg-brand-cream p-5">
               <p className="text-sm text-muted-foreground">Student profile</p>
               <p className="mt-2 text-lg font-semibold text-foreground">
@@ -71,7 +72,7 @@ export default function AdminConsultationDetailPage() {
                     {entry.fromStatus ?? "Start"} → {entry.toStatus}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleString()}
+                    {formatDateTime(entry.createdAt)}
                   </p>
                   {entry.notes ? (
                     <p className="mt-2 text-sm text-muted-foreground">{entry.notes}</p>

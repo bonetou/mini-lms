@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isValidDateValue } from "@/lib/dates";
 
 const consultationStatusSchema = z.enum([
   "SCHEDULED",
@@ -16,7 +17,7 @@ const optionalIntSchema = z
 const optionalDateTimeSchema = z
   .string()
   .optional()
-  .refine((value) => !value || !Number.isNaN(Date.parse(value)), {
+  .refine((value) => !value || isValidDateValue(value), {
     message: "Invalid datetime value",
   });
 

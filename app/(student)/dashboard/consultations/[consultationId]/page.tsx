@@ -11,6 +11,7 @@ import { StatusBadge } from "@/components/status-badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useBookingModal } from "@/lib/contexts/booking-modal-context";
+import { formatDateTime } from "@/lib/dates";
 import {
   useCancelConsultationMutation,
   useConsultationQuery,
@@ -97,20 +98,20 @@ export default function ConsultationDetailPage() {
               <div className="rounded-[1.5rem] bg-brand-cream p-5">
                 <p className="text-sm text-muted-foreground">Scheduled for</p>
                 <p className="mt-2 text-lg font-semibold text-foreground">
-                  {new Date(consultation.scheduledAt).toLocaleString()}
+                  {formatDateTime(consultation.scheduledAt)}
                 </p>
               </div>
               <div className="rounded-[1.5rem] bg-brand-cream p-5">
                 <p className="text-sm text-muted-foreground">Created on</p>
                 <p className="mt-2 text-lg font-semibold text-foreground">
-                  {new Date(consultation.createdAt).toLocaleString()}
+                  {formatDateTime(consultation.createdAt)}
                 </p>
               </div>
             </div>
             {consultation.cancelledAt ? (
               <div className="rounded-[1.5rem] border border-destructive/20 bg-destructive/5 p-5">
                 <p className="text-sm font-medium text-destructive">
-                  Cancelled at {new Date(consultation.cancelledAt).toLocaleString()}
+                  Cancelled at {formatDateTime(consultation.cancelledAt)}
                 </p>
                 <p className="mt-2 text-sm text-muted-foreground">
                   {consultation.cancellationReason || "No cancellation reason provided."}
@@ -135,7 +136,7 @@ export default function ConsultationDetailPage() {
                     {entry.fromStatus ?? "Start"} → {entry.toStatus}
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground">
-                    {new Date(entry.createdAt).toLocaleString()}
+                    {formatDateTime(entry.createdAt)}
                   </p>
                 </div>
               ))}

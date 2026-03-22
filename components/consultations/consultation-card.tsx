@@ -2,6 +2,7 @@ import Link from "next/link";
 import { CalendarDays, ChevronRight } from "lucide-react";
 import { StatusBadge } from "@/components/status-badge";
 import { Card, CardContent } from "@/components/ui/card";
+import { formatDateTime } from "@/lib/dates";
 import { ConsultationSummary } from "@/lib/types/frontend";
 
 type ConsultationCardProps = {
@@ -34,7 +35,7 @@ export function ConsultationCard({
           <div className="mt-6 flex items-center justify-between">
             <div className="flex items-center gap-2 text-sm text-foreground">
               <CalendarDays className="h-4 w-4 text-brand-blue" />
-              {new Date(consultation.scheduledAt).toLocaleString()}
+              {formatDateTime(consultation.scheduledAt)}
             </div>
             <span className="inline-flex items-center gap-1 text-sm font-medium text-brand-navy">
               View

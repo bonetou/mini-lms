@@ -25,6 +25,9 @@ export default function EditConsultationPage() {
     );
   }
 
+  const consultation = consultationQuery.data;
+  const isCancelled = consultation.status === "CANCELLED";
+
   return (
     <div className="space-y-6">
       <PageHeader
@@ -32,14 +35,21 @@ export default function EditConsultationPage() {
         title="Update consultation details"
         description="Adjust the scheduled time or refine the reason while keeping the consultation record intact."
       />
+      {isCancelled ? (
+        <p className="rounded-[1.5rem] border border-border bg-card px-5 py-4 text-sm text-muted-foreground shadow-sm">
+          Cancelled consultations are locked. You can review the details here,
+          but you cannot edit or reschedule them anymore.
+        </p>
+      ) : null}
       <ConsultationForm
         title="Edit consultation"
         description="Status changes stay in the dedicated actions. This form only updates the editable fields."
         submitLabel="Save changes"
         initialValues={{
-          reason: consultationQuery.data.reason,
-          scheduledAt: consultationQuery.data.scheduledAt,
+          reason: consultation.reason,
+          scheduledAt: consultation.scheduledAt,
         }}
+        disabled={isCancelled}
         isSubmitting={updateMutation.isPending}
         onSubmit={async (values) => {
           await updateMutation.mutateAsync(values);

@@ -28,6 +28,7 @@ type ConsultationFormProps = {
   initialValues?: ConsultationFormValues;
   onSubmit: (values: ConsultationFormValues) => Promise<void>;
   isSubmitting?: boolean;
+  disabled?: boolean;
 };
 
 export function ConsultationForm({
@@ -37,6 +38,7 @@ export function ConsultationForm({
   initialValues,
   onSubmit,
   isSubmitting = false,
+  disabled = false,
 }: ConsultationFormProps) {
   const pathname = usePathname();
   const [reason, setReason] = useState("");
@@ -97,6 +99,7 @@ export function ConsultationForm({
             id="scheduled-at"
             type="datetime-local"
             required
+            disabled={disabled}
             value={scheduledAt}
             onChange={(event) => setScheduledAt(event.target.value)}
             className={fieldErrors.scheduledAt ? "border-destructive" : undefined}
@@ -112,6 +115,7 @@ export function ConsultationForm({
           <textarea
             id="reason"
             required
+            disabled={disabled}
             value={reason}
             onChange={(event) => setReason(event.target.value)}
             className={cn(
@@ -131,7 +135,7 @@ export function ConsultationForm({
       {error ? <p className="mt-4 text-sm text-destructive">{error}</p> : null}
 
       <div className="mt-8 flex justify-end">
-        <Button type="submit" disabled={isSubmitting}>
+        <Button type="submit" disabled={isSubmitting || disabled}>
           {isSubmitting ? "Saving..." : submitLabel}
         </Button>
       </div>

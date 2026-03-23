@@ -6,19 +6,21 @@ import { Button } from "@/components/ui/button";
 type CompleteToggleProps = {
   isCompleted: boolean;
   isPending?: boolean;
+  disabled?: boolean;
   onToggle: (nextValue: boolean) => void;
 };
 
 export function CompleteToggle({
   isCompleted,
   isPending = false,
+  disabled = false,
   onToggle,
 }: CompleteToggleProps) {
   return (
     <Button
       type="button"
       variant={isCompleted ? "secondary" : "outline"}
-      disabled={isPending}
+      disabled={isPending || disabled}
       onClick={() => onToggle(!isCompleted)}
     >
       {isCompleted ? (

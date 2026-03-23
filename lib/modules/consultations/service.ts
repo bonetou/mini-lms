@@ -33,6 +33,46 @@ export class ConsultationsService {
     }
   }
 
+  private assertScheduledAtIsFuture(scheduledAt: string) {
+    if (new Date(scheduledAt).getTime() <= Date.now()) {
+      throw ApiError.badRequest("Consultations must be scheduled in the future.");
+    }
+  }
+
+  private async getOwnConsultationOrThrow(
+    context: AuthContext,
+    consultationId: string,
+  ) {
+    const consultation = await this.repository.findOwnById(
+      consultationId,
+      context.user.id,
+    );
+
+    if (!consultation) {
+      throw ApiError.notFound("Consultation not found");
+    }
+
+    return consultation;
+  }
+
+  private assertNotCancelled(
+    consultation: { status: ConsultationStatus },
+    message: string,
+  ) {
+    if (consultation.status === "CANCELLED") {
+      throw ApiError.conflict(message);
+    }
+  }
+
+  private assertNotCompleted(
+    consultation: { status: ConsultationStatus },
+    message: string,
+  ) {
+    if (consultation.status === "COMPLETED") {
+      throw ApiError.conflict(message);
+    }
+  }
+
   async list(context: AuthContext, filters: ConsultationListQuery) {
     if (filters.scope === "all") {
       if (!context.isAdmin) {
@@ -75,6 +115,7 @@ export class ConsultationsService {
     input: { reason: string; scheduledAt: string },
   ) {
     this.assertStudentMutationAllowed(context);
+    this.assertScheduledAtIsFuture(input.scheduledAt);
 
     const created = await this.repository.create({
       studentId: context.user.id,
@@ -116,6 +157,12 @@ export class ConsultationsService {
     input: { reason?: string; scheduledAt?: string },
   ) {
     this.assertStudentMutationAllowed(context);
+    const consultation = await this.getOwnConsultationOrThrow(context, consultationId);
+    this.assertNotCancelled(consultation, "Cancelled consultations cannot be edited.");
+
+    if (input.scheduledAt !== undefined) {
+      this.assertScheduledAtIsFuture(input.scheduledAt);
+    }
 
     const updated = await this.repository.updateOwn(consultationId, context.user.id, {
       ...(input.reason !== undefined ? { reason: input.reason } : {}),
@@ -137,6 +184,12 @@ export class ConsultationsService {
     input: { scheduledAt: string },
   ) {
     this.assertStudentMutationAllowed(context);
+    const consultation = await this.getOwnConsultationOrThrow(context, consultationId);
+    this.assertNotCancelled(
+      consultation,
+      "Cancelled consultations cannot be rescheduled.",
+    );
+    this.assertScheduledAtIsFuture(input.scheduledAt);
 
     const updated = await this.repository.updateOwn(consultationId, context.user.id, {
       scheduled_at: input.scheduledAt,
@@ -159,6 +212,15 @@ export class ConsultationsService {
     input: { cancellationReason?: string },
   ) {
     this.assertStudentMutationAllowed(context);
+    const consultation = await this.getOwnConsultationOrThrow(context, consultationId);
+    this.assertNotCancelled(
+      consultation,
+      "Cancelled consultations cannot be cancelled again.",
+    );
+    this.assertNotCompleted(
+      consultation,
+      "Completed consultations cannot be cancelled.",
+    );
 
     const updated = await this.repository.updateOwn(consultationId, context.user.id, {
       status: "CANCELLED",
@@ -180,19 +242,8 @@ export class ConsultationsService {
     input: { isCompleted: boolean },
   ) {
     this.assertStudentMutationAllowed(context);
-
-    const consultation = await this.repository.findOwnById(
-      consultationId,
-      context.user.id,
-    );
-
-    if (!consultation) {
-      throw ApiError.notFound("Consultation not found");
-    }
-
-    if (consultation.status === "CANCELLED") {
-      throw ApiError.conflict("Cancelled consultations cannot be completed");
-    }
+    const consultation = await this.getOwnConsultationOrThrow(context, consultationId);
+    this.assertNotCancelled(consultation, "Cancelled consultations cannot be completed");
 
     let nextStatus: ConsultationStatus;
     if (input.isCompleted) {

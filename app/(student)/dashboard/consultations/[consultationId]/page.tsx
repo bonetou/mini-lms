@@ -38,6 +38,7 @@ export default function ConsultationDetailPage() {
   }
 
   const consultation = consultationQuery.data;
+  const isCancelled = consultation.status === "CANCELLED";
   const studentName = [
     consultation.studentProfile?.firstName ?? consultation.studentFirstName,
     consultation.studentProfile?.lastName ?? consultation.studentLastName,
@@ -92,19 +93,27 @@ export default function ConsultationDetailPage() {
         description="Review your consultation record, manage its schedule, and track status changes."
         actions={
           <>
-            <Button asChild variant="outline">
-              <Link href={`/dashboard/consultations/${consultationId}/edit`}>
+            {isCancelled ? (
+              <Button variant="outline" disabled>
                 Edit details
-              </Link>
-            </Button>
+              </Button>
+            ) : (
+              <Button asChild variant="outline">
+                <Link href={`/dashboard/consultations/${consultationId}/edit`}>
+                  Edit details
+                </Link>
+              </Button>
+            )}
             <Button
               variant="outline"
+              disabled={isCancelled}
               onClick={() => bookingModal.openModal("reschedule", consultationId)}
             >
               Reschedule
             </Button>
             <Button
               variant="destructive"
+              disabled={isCancelled}
               onClick={() => bookingModal.openModal("cancel", consultationId)}
             >
               Cancel
@@ -112,6 +121,14 @@ export default function ConsultationDetailPage() {
           </>
         }
       />
+
+      {isCancelled ? (
+        <p className="rounded-[1.5rem] border border-border bg-card px-5 py-4 text-sm text-muted-foreground shadow-sm">
+          Cancelled consultations are locked. You can still review the record and
+          audit history, but editing, rescheduling, cancelling again, and
+          completion changes are disabled.
+        </p>
+      ) : null}
 
       <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
         <Card>
@@ -125,6 +142,7 @@ export default function ConsultationDetailPage() {
               </div>
               <CompleteToggle
                 isCompleted={consultation.isCompleted}
+                disabled={isCancelled}
                 isPending={toggleMutation.isPending}
                 onToggle={(nextValue) =>
                   toggleMutation.mutate({ isCompleted: nextValue })

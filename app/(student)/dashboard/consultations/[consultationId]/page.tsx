@@ -39,12 +39,6 @@ export default function ConsultationDetailPage() {
 
   const consultation = consultationQuery.data;
   const isCancelled = consultation.status === "CANCELLED";
-  const studentName = [
-    consultation.studentProfile?.firstName ?? consultation.studentFirstName,
-    consultation.studentProfile?.lastName ?? consultation.studentLastName,
-  ]
-    .filter(Boolean)
-    .join(" ");
   const isRescheduleOpen =
     bookingModal.isOpen &&
     bookingModal.mode === "reschedule" &&
@@ -130,9 +124,9 @@ export default function ConsultationDetailPage() {
         </p>
       ) : null}
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-1">
         <Card>
-          <CardContent className="space-y-5 p-8">
+          <CardContent className="space-y-4 p-6">
             <div className="flex items-center justify-between gap-4">
               <div>
                 <p className="text-sm text-muted-foreground">Current status</p>
@@ -149,29 +143,11 @@ export default function ConsultationDetailPage() {
                 }
               />
             </div>
-            <div className="rounded-[1.5rem] bg-brand-cream p-5">
-              <p className="text-sm text-muted-foreground">Scheduled time</p>
-              <p className="mt-2 text-lg font-semibold text-foreground">
-                {formatDateTime(consultation.scheduledAt)}
-              </p>
-            </div>
             <div className="grid gap-4 rounded-[1.5rem] bg-brand-cream p-5 md:grid-cols-2">
               <div>
-                <p className="text-sm text-muted-foreground">Student name</p>
+                <p className="text-sm text-muted-foreground">Scheduled time</p>
                 <p className="mt-2 text-lg font-semibold text-foreground">
-                  {studentName || "Unknown student"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Student email</p>
-                <p className="mt-2 text-base text-foreground">
-                  {consultation.studentProfile?.email ?? "No email available"}
-                </p>
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground">Student ID</p>
-                <p className="mt-2 break-all text-sm text-foreground">
-                  {consultation.studentId}
+                  {formatDateTime(consultation.scheduledAt)}
                 </p>
               </div>
               <div>
@@ -205,31 +181,6 @@ export default function ConsultationDetailPage() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardContent className="p-8">
-            <p className="text-xs font-semibold uppercase tracking-[0.28em] text-brand-blue">
-              Audit history
-            </p>
-            <div className="mt-6 space-y-4">
-              {consultation.statusHistory.map((entry) => (
-                <div
-                  key={entry.id}
-                  className="rounded-[1.5rem] border border-border bg-background p-4"
-                >
-                  <p className="font-medium text-foreground">
-                    {entry.fromStatus ?? "Start"} → {entry.toStatus}
-                  </p>
-                  <p className="mt-2 text-xs text-muted-foreground">
-                    {formatDateTime(entry.createdAt)}
-                  </p>
-                  {entry.notes ? (
-                    <p className="mt-2 text-sm text-muted-foreground">{entry.notes}</p>
-                  ) : null}
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
       </div>
 
       <RescheduleDialog

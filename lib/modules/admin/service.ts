@@ -2,8 +2,13 @@ import { ApiError } from "@/lib/api/errors";
 import { AdminRepository } from "./repository";
 import { AdminConsultationListQuery } from "@/lib/modules/consultations/schemas";
 
+export type AdminRepositoryLike = Pick<
+  AdminRepository,
+  "listConsultations" | "getConsultationById" | "listUsers" | "getUserById"
+>;
+
 export class AdminService {
-  private readonly repository = new AdminRepository();
+  constructor(private readonly repository: AdminRepositoryLike) {}
 
   async listConsultations(filters: AdminConsultationListQuery) {
     return this.repository.listConsultations(filters);

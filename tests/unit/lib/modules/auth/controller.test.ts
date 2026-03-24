@@ -1,54 +1,22 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import {
-  forgotPasswordController,
-  loginController,
-  logoutController,
-  meController,
-  signUpController,
-  updatePasswordController,
-} from "@/lib/modules/auth/controller";
+import { AuthController } from "@/lib/modules/auth/controller";
 
-const { authServiceMock, routeClientMock } = vi.hoisted(() => ({
-  authServiceMock: {
-    forgotPassword: vi.fn(),
-    signUp: vi.fn(),
-    login: vi.fn(),
-    logout: vi.fn(),
-    me: vi.fn(),
-    updatePassword: vi.fn(),
-  },
-  routeClientMock: {
-    supabase: {},
-  },
-}));
-
-vi.mock("@/lib/api/auth-context", () => ({
-  withApiHandler: vi.fn(
-    async (
-      _request: NextRequest,
-      handler: (routeClient: typeof routeClientMock) => Promise<Response>,
-    ) => {
-      try {
-        return await handler(routeClientMock);
-      } catch (error) {
-        const { errorResponse } = await import("@/lib/api/http");
-        return errorResponse(error);
-      }
-    },
-  ),
-}));
-
-vi.mock("@/lib/modules/auth/service", () => ({
-  AuthService: vi.fn(() => authServiceMock),
-}));
+const authServiceMock = {
+  forgotPassword: vi.fn(),
+  signUp: vi.fn(),
+  login: vi.fn(),
+  logout: vi.fn(),
+  me: vi.fn(),
+  updatePassword: vi.fn(),
+};
 
 describe("auth controllers", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
 
-  it("signUpController passes the request origin as emailRedirectTo", async () => {
+  it("signUp passes the request origin as emailRedirectTo", async () => {
     authServiceMock.signUp.mockResolvedValue({
       user: {
         id: "user-1",
@@ -57,6 +25,7 @@ describe("auth controllers", () => {
       session: null,
     });
 
+    const controller = new AuthController(authServiceMock);
     const request = new NextRequest("http://localhost:3000/api/auth/sign-up", {
       method: "POST",
       body: JSON.stringify({
@@ -70,7 +39,7 @@ describe("auth controllers", () => {
       },
     });
 
-    const response = await signUpController(request);
+    const response = await controller.signUp(request);
 
     expect(authServiceMock.signUp).toHaveBeenCalledWith({
       email: "user@example.com",
@@ -91,7 +60,7 @@ describe("auth controllers", () => {
     });
   });
 
-  it("loginController validates the request body before calling the service", async () => {
+  it("login validates the request body before calling the service", async () => {
     authServiceMock.login.mockResolvedValue({
       user: {
         id: "user-1",
@@ -101,6 +70,7 @@ describe("auth controllers", () => {
       roles: ["student"],
     });
 
+    const controller = new AuthController(authServiceMock);
     const request = new NextRequest("http://localhost/api/auth/login", {
       method: "POST",
       body: JSON.stringify({
@@ -112,7 +82,7 @@ describe("auth controllers", () => {
       },
     });
 
-    const response = await loginController(request);
+    const response = await controller.login(request);
 
     expect(authServiceMock.login).toHaveBeenCalledWith({
       email: "user@example.com",
@@ -121,7 +91,8 @@ describe("auth controllers", () => {
     expect(response.status).toBe(200);
   });
 
-  it("loginController returns a BAD_REQUEST envelope for invalid input", async () => {
+  it("login rejects invalid input", async () => {
+    const controller = new AuthController(authServiceMock);
     const request = new NextRequest("http://localhost/api/auth/login", {
       method: "POST",
       body: JSON.stringify({
@@ -133,22 +104,17 @@ describe("auth controllers", () => {
       },
     });
 
-    const response = await loginController(request);
-
+    await expect(controller.login(request)).rejects.toHaveProperty(
+      "name",
+      "ZodError",
+    );
     expect(authServiceMock.login).not.toHaveBeenCalled();
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({
-      data: null,
-      error: {
-        code: "BAD_REQUEST",
-        message: "Request validation failed",
-      },
-    });
   });
 
-  it("forgotPasswordController passes the request origin as redirectTo", async () => {
+  it("forgotPassword passes the request origin as redirectTo", async () => {
     authServiceMock.forgotPassword.mockResolvedValue({ success: true });
 
+    const controller = new AuthController(authServiceMock);
     const request = new NextRequest(
       "http://localhost:3000/api/auth/forgot-password",
       {
@@ -162,7 +128,7 @@ describe("auth controllers", () => {
       },
     );
 
-    const response = await forgotPasswordController(request);
+    const response = await controller.forgotPassword(request);
 
     expect(authServiceMock.forgotPassword).toHaveBeenCalledWith({
       email: "user@example.com",
@@ -176,9 +142,10 @@ describe("auth controllers", () => {
     });
   });
 
-  it("updatePasswordController validates and returns success", async () => {
+  it("updatePassword validates and returns success", async () => {
     authServiceMock.updatePassword.mockResolvedValue({ success: true });
 
+    const controller = new AuthController(authServiceMock);
     const request = new NextRequest(
       "http://localhost/api/auth/update-password",
       {
@@ -192,7 +159,7 @@ describe("auth controllers", () => {
       },
     );
 
-    const response = await updatePasswordController(request);
+    const response = await controller.updatePassword(request);
 
     expect(authServiceMock.updatePassword).toHaveBeenCalledWith({
       password: "password123",
@@ -205,14 +172,11 @@ describe("auth controllers", () => {
     });
   });
 
-  it("logoutController returns the service response", async () => {
+  it("logout returns the service response", async () => {
     authServiceMock.logout.mockResolvedValue({ success: true });
 
-    const response = await logoutController(
-      new NextRequest("http://localhost/api/auth/logout", {
-        method: "POST",
-      }),
-    );
+    const controller = new AuthController(authServiceMock);
+    const response = await controller.logout();
 
     expect(authServiceMock.logout).toHaveBeenCalled();
     await expect(response.json()).resolves.toEqual({
@@ -222,7 +186,7 @@ describe("auth controllers", () => {
     });
   });
 
-  it("meController returns the current user payload", async () => {
+  it("me returns the current user payload", async () => {
     authServiceMock.me.mockResolvedValue({
       user: {
         id: "user-1",
@@ -233,9 +197,8 @@ describe("auth controllers", () => {
       isAdmin: true,
     });
 
-    const response = await meController(
-      new NextRequest("http://localhost/api/auth/me"),
-    );
+    const controller = new AuthController(authServiceMock);
+    const response = await controller.me();
 
     expect(authServiceMock.me).toHaveBeenCalled();
     await expect(response.json()).resolves.toMatchObject({

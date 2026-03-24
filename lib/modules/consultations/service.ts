@@ -11,12 +11,18 @@ import {
   mapConsultationHistory,
 } from "./repository";
 
-export class ConsultationsService {
-  private readonly repository: ConsultationsRepository;
+export type ConsultationsRepositoryLike = Pick<
+  ConsultationsRepository,
+  | "listOwn"
+  | "create"
+  | "findOwnById"
+  | "getOwnHistory"
+  | "getLatestNonCompletedStatus"
+  | "updateOwn"
+>;
 
-  constructor(context: AuthContext) {
-    this.repository = new ConsultationsRepository(context.routeClient.supabase);
-  }
+export class ConsultationsService {
+  constructor(private readonly repository: ConsultationsRepositoryLike) {}
 
   private assertStudentMutationAllowed(context: AuthContext) {
     if (context.isAdmin) {

@@ -5,7 +5,6 @@ import {
   parseSearchParams,
   successResponse,
 } from "@/lib/api/http";
-import { errorResponse } from "@/lib/api/http";
 import { requireAuthContext } from "@/lib/api/auth-context";
 import {
   adminConsultationListQuerySchema,
@@ -19,118 +18,91 @@ import {
 } from "./schemas";
 import { ConsultationsService } from "./service";
 
-export async function listConsultationsController(request: NextRequest) {
-  try {
-    const context = await requireAuthContext(request);
+type ConsultationsServiceLike = Pick<
+  ConsultationsService,
+  "list" | "create" | "getById" | "patch" | "reschedule" | "cancel" | "toggleComplete"
+>;
+
+export class ConsultationsController {
+  constructor(private readonly service: ConsultationsServiceLike) {}
+
+  async list(request: NextRequest, context: Awaited<ReturnType<typeof requireAuthContext>>) {
     const query = parseSearchParams(
       request.nextUrl.searchParams,
       consultationListQuerySchema,
     );
-    const service = new ConsultationsService(context);
-    const data = await service.list(context, query);
+    const data = await this.service.list(context, query);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function createConsultationController(request: NextRequest) {
-  try {
-    const context = await requireAuthContext(request);
+  async create(
+    request: NextRequest,
+    context: Awaited<ReturnType<typeof requireAuthContext>>,
+  ) {
     const body = await parseJsonBody(request, createConsultationBodySchema);
-    const service = new ConsultationsService(context);
-    const data = await service.create(context, body);
+    const data = await this.service.create(context, body);
 
-    return context.routeClient.applyCookies(
-      successResponse(data, { status: 201 }),
-    );
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data, { status: 201 });
   }
-}
 
-export async function getConsultationController(
-  request: NextRequest,
-  params: unknown,
-) {
-  try {
-    const context = await requireAuthContext(request);
+  async getById(
+    request: NextRequest,
+    context: Awaited<ReturnType<typeof requireAuthContext>>,
+    params: unknown,
+  ) {
     const { id } = parseRouteParams(params, consultationParamsSchema);
-    const service = new ConsultationsService(context);
-    const data = await service.getById(context, id);
+    const data = await this.service.getById(context, id);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function patchConsultationController(
-  request: NextRequest,
-  params: unknown,
-) {
-  try {
-    const context = await requireAuthContext(request);
+  async patch(
+    request: NextRequest,
+    context: Awaited<ReturnType<typeof requireAuthContext>>,
+    params: unknown,
+  ) {
     const { id } = parseRouteParams(params, consultationParamsSchema);
     const body = await parseJsonBody(request, patchConsultationBodySchema);
-    const service = new ConsultationsService(context);
-    const data = await service.patch(context, id, body);
+    const data = await this.service.patch(context, id, body);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function rescheduleConsultationController(
-  request: NextRequest,
-  params: unknown,
-) {
-  try {
-    const context = await requireAuthContext(request);
+  async reschedule(
+    request: NextRequest,
+    context: Awaited<ReturnType<typeof requireAuthContext>>,
+    params: unknown,
+  ) {
     const { id } = parseRouteParams(params, consultationParamsSchema);
     const body = await parseJsonBody(request, rescheduleConsultationBodySchema);
-    const service = new ConsultationsService(context);
-    const data = await service.reschedule(context, id, body);
+    const data = await this.service.reschedule(context, id, body);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function cancelConsultationController(
-  request: NextRequest,
-  params: unknown,
-) {
-  try {
-    const context = await requireAuthContext(request);
+  async cancel(
+    request: NextRequest,
+    context: Awaited<ReturnType<typeof requireAuthContext>>,
+    params: unknown,
+  ) {
     const { id } = parseRouteParams(params, consultationParamsSchema);
     const body = await parseJsonBody(request, cancelConsultationBodySchema);
-    const service = new ConsultationsService(context);
-    const data = await service.cancel(context, id, body);
+    const data = await this.service.cancel(context, id, body);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function toggleCompleteConsultationController(
-  request: NextRequest,
-  params: unknown,
-) {
-  try {
-    const context = await requireAuthContext(request);
+  async toggleComplete(
+    request: NextRequest,
+    context: Awaited<ReturnType<typeof requireAuthContext>>,
+    params: unknown,
+  ) {
     const { id } = parseRouteParams(params, consultationParamsSchema);
     const body = await parseJsonBody(request, toggleCompleteBodySchema);
-    const service = new ConsultationsService(context);
-    const data = await service.toggleComplete(context, id, body);
+    const data = await this.service.toggleComplete(context, id, body);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
 }
 

@@ -1,40 +1,26 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
-import {
-  getAdminConsultationController,
-  getAdminUserController,
-  listAdminConsultationsController,
-  listAdminUsersController,
-} from "@/lib/modules/admin/controller";
+import { AdminController } from "@/lib/modules/admin/controller";
 
-const { adminServiceMock, adminContextMock } = vi.hoisted(() => ({
-  adminServiceMock: {
-    listConsultations: vi.fn(),
-    getConsultationById: vi.fn(),
-    listUsers: vi.fn(),
-    getUserById: vi.fn(),
+const adminServiceMock = {
+  listConsultations: vi.fn(),
+  getConsultationById: vi.fn(),
+  listUsers: vi.fn(),
+  getUserById: vi.fn(),
+};
+
+const adminContextMock = {
+  routeClient: {
+    applyCookies: (response: Response) => response,
   },
-  adminContextMock: {
-    routeClient: {
-      applyCookies: (response: Response) => response,
-    },
-    user: {
-      id: "admin-1",
-    },
-    profile: null,
-    roles: ["admin"],
-    isAdmin: true,
+  user: {
+    id: "admin-1",
   },
-}));
-
-vi.mock("@/lib/api/auth-context", () => ({
-  requireAdminContext: vi.fn(async () => adminContextMock),
-}));
-
-vi.mock("@/lib/modules/admin/service", () => ({
-  AdminService: vi.fn(() => adminServiceMock),
-}));
+  profile: null,
+  roles: ["admin"],
+  isAdmin: true,
+} as const;
 
 describe("admin controllers", () => {
   beforeEach(() => {
@@ -49,7 +35,8 @@ describe("admin controllers", () => {
       pageSize: 5,
     });
 
-    const response = await listAdminConsultationsController(
+    const controller = new AdminController(adminServiceMock);
+    const response = await controller.listConsultations(
       new NextRequest(
         "http://localhost/api/admin/consultations?page=2&pageSize=5",
       ),
@@ -69,8 +56,10 @@ describe("admin controllers", () => {
       id: "consultation-1",
     });
 
-    const response = await getAdminConsultationController(
+    const controller = new AdminController(adminServiceMock);
+    const response = await controller.getConsultationById(
       new NextRequest("http://localhost/api/admin/consultations/1"),
+      adminContextMock,
       { id: "11111111-1111-4111-8111-111111111111" },
     );
 
@@ -88,7 +77,8 @@ describe("admin controllers", () => {
       pageSize: 10,
     });
 
-    const response = await listAdminUsersController(
+    const controller = new AdminController(adminServiceMock);
+    const response = await controller.listUsers(
       new NextRequest("http://localhost/api/admin/users?page=1&pageSize=10"),
     );
 
@@ -104,8 +94,10 @@ describe("admin controllers", () => {
       id: "user-1",
     });
 
-    const response = await getAdminUserController(
+    const controller = new AdminController(adminServiceMock);
+    const response = await controller.getUserById(
       new NextRequest("http://localhost/api/admin/users/1"),
+      adminContextMock,
       { id: "11111111-1111-4111-8111-111111111111" },
     );
 
@@ -115,23 +107,23 @@ describe("admin controllers", () => {
     expect(response.status).toBe(200);
   });
 
-  it("returns controller errors through the shared error envelope", async () => {
+  it("surfaces service errors for the route layer to wrap", async () => {
     adminServiceMock.getUserById.mockRejectedValue(
       ApiError.notFound("User not found"),
     );
 
-    const response = await getAdminUserController(
-      new NextRequest("http://localhost/api/admin/users/1"),
-      { id: "11111111-1111-4111-8111-111111111111" },
-    );
+    const controller = new AdminController(adminServiceMock);
 
-    expect(response.status).toBe(404);
-    await expect(response.json()).resolves.toMatchObject({
-      data: null,
-      error: {
-        code: "NOT_FOUND",
-        message: "User not found",
-      },
+    await expect(
+      controller.getUserById(
+        new NextRequest("http://localhost/api/admin/users/1"),
+        adminContextMock,
+        { id: "11111111-1111-4111-8111-111111111111" },
+      ),
+    ).rejects.toMatchObject({
+      status: 404,
+      code: "NOT_FOUND",
+      message: "User not found",
     });
   });
 });

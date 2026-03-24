@@ -1,54 +1,37 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { ApiError } from "@/lib/api/errors";
-import {
-  cancelConsultationController,
-  createConsultationController,
-  getConsultationController,
-  listConsultationsController,
-  patchConsultationController,
-  rescheduleConsultationController,
-  toggleCompleteConsultationController,
-} from "@/lib/modules/consultations/controller";
+import { ConsultationsController } from "@/lib/modules/consultations/controller";
 
-const { consultationsServiceMock, authContextMock } = vi.hoisted(() => ({
-  consultationsServiceMock: {
-    list: vi.fn(),
-    create: vi.fn(),
-    getById: vi.fn(),
-    patch: vi.fn(),
-    reschedule: vi.fn(),
-    cancel: vi.fn(),
-    toggleComplete: vi.fn(),
+const consultationsServiceMock = {
+  list: vi.fn(),
+  create: vi.fn(),
+  getById: vi.fn(),
+  patch: vi.fn(),
+  reschedule: vi.fn(),
+  cancel: vi.fn(),
+  toggleComplete: vi.fn(),
+};
+
+const authContextMock = {
+  routeClient: {
+    supabase: {},
+    applyCookies: (response: Response) => response,
   },
-  authContextMock: {
-    routeClient: {
-      supabase: {},
-      applyCookies: (response: Response) => response,
-    },
-    user: {
-      id: "student-1",
-    },
-    profile: {
-      id: "student-1",
-      email: "student@example.com",
-      firstName: "Jane",
-      lastName: "Doe",
-      createdAt: "2026-03-20T10:00:00.000Z",
-      updatedAt: "2026-03-20T10:00:00.000Z",
-    },
-    roles: ["student"],
-    isAdmin: false,
+  user: {
+    id: "student-1",
   },
-}));
-
-vi.mock("@/lib/api/auth-context", () => ({
-  requireAuthContext: vi.fn(async () => authContextMock),
-}));
-
-vi.mock("@/lib/modules/consultations/service", () => ({
-  ConsultationsService: vi.fn(() => consultationsServiceMock),
-}));
+  profile: {
+    id: "student-1",
+    email: "student@example.com",
+    firstName: "Jane",
+    lastName: "Doe",
+    createdAt: "2026-03-20T10:00:00.000Z",
+    updatedAt: "2026-03-20T10:00:00.000Z",
+  },
+  roles: ["student"],
+  isAdmin: false,
+} as const;
 
 describe("consultation controllers", () => {
   beforeEach(() => {
@@ -64,11 +47,12 @@ describe("consultation controllers", () => {
       scope: "own",
     });
 
+    const controller = new ConsultationsController(consultationsServiceMock);
     const request = new NextRequest(
       "http://localhost/api/consultations?page=2&pageSize=20",
     );
 
-    const response = await listConsultationsController(request);
+    const response = await controller.list(request, authContextMock);
 
     expect(consultationsServiceMock.list).toHaveBeenCalledWith(
       authContextMock,
@@ -86,6 +70,7 @@ describe("consultation controllers", () => {
       id: "consultation-1",
     });
 
+    const controller = new ConsultationsController(consultationsServiceMock);
     const request = new NextRequest("http://localhost/api/consultations", {
       method: "POST",
       body: JSON.stringify({
@@ -97,19 +82,17 @@ describe("consultation controllers", () => {
       },
     });
 
-    const response = await createConsultationController(request);
+    const response = await controller.create(request, authContextMock);
 
-    expect(consultationsServiceMock.create).toHaveBeenCalledWith(
-      authContextMock,
-      {
-        reason: "Need help",
-        scheduledAt: "2099-01-01T00:00:00.000Z",
-      },
-    );
+    expect(consultationsServiceMock.create).toHaveBeenCalledWith(authContextMock, {
+      reason: "Need help",
+      scheduledAt: "2099-01-01T00:00:00.000Z",
+    });
     expect(response.status).toBe(201);
   });
 
   it("returns BAD_REQUEST when create payload validation fails", async () => {
+    const controller = new ConsultationsController(consultationsServiceMock);
     const request = new NextRequest("http://localhost/api/consultations", {
       method: "POST",
       body: JSON.stringify({
@@ -121,10 +104,11 @@ describe("consultation controllers", () => {
       },
     });
 
-    const response = await createConsultationController(request);
-
+    await expect(controller.create(request, authContextMock)).rejects.toHaveProperty(
+      "name",
+      "ZodError",
+    );
     expect(consultationsServiceMock.create).not.toHaveBeenCalled();
-    expect(response.status).toBe(400);
   });
 
   it("loads one consultation by route param", async () => {
@@ -132,8 +116,10 @@ describe("consultation controllers", () => {
       id: "consultation-1",
     });
 
-    const response = await getConsultationController(
+    const controller = new ConsultationsController(consultationsServiceMock);
+    const response = await controller.getById(
       new NextRequest("http://localhost/api/consultations/consultation-1"),
+      authContextMock,
       { id: "11111111-1111-4111-8111-111111111111" },
     );
 
@@ -149,7 +135,8 @@ describe("consultation controllers", () => {
       id: "consultation-1",
     });
 
-    const response = await patchConsultationController(
+    const controller = new ConsultationsController(consultationsServiceMock);
+    const response = await controller.patch(
       new NextRequest("http://localhost/api/consultations/consultation-1", {
         method: "PATCH",
         body: JSON.stringify({
@@ -159,6 +146,7 @@ describe("consultation controllers", () => {
           "content-type": "application/json",
         },
       }),
+      authContextMock,
       { id: "11111111-1111-4111-8111-111111111111" },
     );
 
@@ -172,31 +160,31 @@ describe("consultation controllers", () => {
     expect(response.status).toBe(200);
   });
 
-  it("returns service conflicts from reschedule", async () => {
+  it("surfaces service conflicts from reschedule", async () => {
     consultationsServiceMock.reschedule.mockRejectedValue(
       ApiError.conflict("Cancelled consultations cannot be rescheduled."),
     );
 
-    const response = await rescheduleConsultationController(
-      new NextRequest("http://localhost/api/consultations/consultation-1", {
-        method: "POST",
-        body: JSON.stringify({
-          scheduledAt: "2099-01-01T00:00:00.000Z",
-        }),
-        headers: {
-          "content-type": "application/json",
-        },
-      }),
-      { id: "11111111-1111-4111-8111-111111111111" },
-    );
+    const controller = new ConsultationsController(consultationsServiceMock);
 
-    expect(response.status).toBe(409);
-    await expect(response.json()).resolves.toMatchObject({
-      data: null,
-      error: {
-        code: "CONFLICT",
-        message: "Cancelled consultations cannot be rescheduled.",
-      },
+    await expect(
+      controller.reschedule(
+        new NextRequest("http://localhost/api/consultations/consultation-1", {
+          method: "POST",
+          body: JSON.stringify({
+            scheduledAt: "2099-01-01T00:00:00.000Z",
+          }),
+          headers: {
+            "content-type": "application/json",
+          },
+        }),
+        authContextMock,
+        { id: "11111111-1111-4111-8111-111111111111" },
+      ),
+    ).rejects.toMatchObject({
+      status: 409,
+      code: "CONFLICT",
+      message: "Cancelled consultations cannot be rescheduled.",
     });
   });
 
@@ -205,7 +193,8 @@ describe("consultation controllers", () => {
       id: "consultation-1",
     });
 
-    const response = await cancelConsultationController(
+    const controller = new ConsultationsController(consultationsServiceMock);
+    const response = await controller.cancel(
       new NextRequest("http://localhost/api/consultations/consultation-1", {
         method: "POST",
         body: JSON.stringify({
@@ -215,6 +204,7 @@ describe("consultation controllers", () => {
           "content-type": "application/json",
         },
       }),
+      authContextMock,
       { id: "11111111-1111-4111-8111-111111111111" },
     );
 
@@ -234,7 +224,8 @@ describe("consultation controllers", () => {
       isCompleted: true,
     });
 
-    const response = await toggleCompleteConsultationController(
+    const controller = new ConsultationsController(consultationsServiceMock);
+    const response = await controller.toggleComplete(
       new NextRequest("http://localhost/api/consultations/consultation-1", {
         method: "POST",
         body: JSON.stringify({
@@ -244,6 +235,7 @@ describe("consultation controllers", () => {
           "content-type": "application/json",
         },
       }),
+      authContextMock,
       { id: "11111111-1111-4111-8111-111111111111" },
     );
 

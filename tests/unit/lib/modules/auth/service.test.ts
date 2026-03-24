@@ -1,30 +1,21 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AuthService } from "@/lib/modules/auth/service";
 
-const { authRepositoryMock, authAdminRepositoryMock } = vi.hoisted(() => ({
-  authRepositoryMock: {
-    resetPasswordForEmail: vi.fn(),
-    signUp: vi.fn(),
-    signIn: vi.fn(),
-    signOut: vi.fn(),
-    getUser: vi.fn(),
-    updateUserPassword: vi.fn(),
-  },
-  authAdminRepositoryMock: {
-    getProfileByUserId: vi.fn(),
-    getRolesByUserId: vi.fn(),
-  },
-}));
+const authRepositoryMock = {
+  resetPasswordForEmail: vi.fn(),
+  signUp: vi.fn(),
+  signIn: vi.fn(),
+  signOut: vi.fn(),
+  getUser: vi.fn(),
+  updateUserPassword: vi.fn(),
+};
 
-vi.mock("@/lib/modules/auth/repository", async () => {
-  return {
-    AuthRepository: vi.fn(() => authRepositoryMock),
-    AuthAdminRepository: vi.fn(() => authAdminRepositoryMock),
-  };
-});
+const authAdminRepositoryMock = {
+  getProfileByUserId: vi.fn(),
+  getRolesByUserId: vi.fn(),
+};
 
 describe("AuthService", () => {
-  const supabase = {} as never;
   const profile = {
     id: "user-1",
     email: "user@example.com",
@@ -53,7 +44,7 @@ describe("AuthService", () => {
       error: null,
     });
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
     const result = await service.signUp({
       email: "user@example.com",
       password: "password",
@@ -84,7 +75,7 @@ describe("AuthService", () => {
       },
     });
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
 
     await expect(
       service.signUp({
@@ -111,7 +102,7 @@ describe("AuthService", () => {
     authAdminRepositoryMock.getProfileByUserId.mockResolvedValue(profile);
     authAdminRepositoryMock.getRolesByUserId.mockResolvedValue(["student"]);
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
     const result = await service.login({
       email: "user@example.com",
       password: "password",
@@ -132,7 +123,7 @@ describe("AuthService", () => {
       error: null,
     });
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
 
     await expect(
       service.forgotPassword({
@@ -149,7 +140,7 @@ describe("AuthService", () => {
       error: null,
     });
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
 
     await expect(service.logout()).resolves.toEqual({
       success: true,
@@ -172,7 +163,7 @@ describe("AuthService", () => {
       "admin",
     ]);
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
 
     await expect(service.me()).resolves.toEqual({
       user: {
@@ -193,7 +184,7 @@ describe("AuthService", () => {
       error: null,
     });
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
 
     await expect(service.me()).rejects.toMatchObject({
       status: 401,
@@ -206,7 +197,7 @@ describe("AuthService", () => {
       error: null,
     });
 
-    const service = new AuthService(supabase);
+    const service = new AuthService(authRepositoryMock, authAdminRepositoryMock);
 
     await expect(
       service.updatePassword({

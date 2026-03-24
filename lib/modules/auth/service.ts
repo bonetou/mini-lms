@@ -1,4 +1,3 @@
-import { SupabaseClient } from "@supabase/supabase-js";
 import { ApiError } from "@/lib/api/errors";
 import { AuthRepository, AuthAdminRepository } from "./repository";
 
@@ -24,13 +23,26 @@ type UpdatePasswordInput = {
   password: string;
 };
 
-export class AuthService {
-  private readonly repository: AuthRepository;
-  private readonly adminRepository = new AuthAdminRepository();
+export type AuthRepositoryLike = Pick<
+  AuthRepository,
+  | "signUp"
+  | "signIn"
+  | "signOut"
+  | "getUser"
+  | "resetPasswordForEmail"
+  | "updateUserPassword"
+>;
 
-  constructor(supabase: SupabaseClient) {
-    this.repository = new AuthRepository(supabase);
-  }
+export type AuthAdminRepositoryLike = Pick<
+  AuthAdminRepository,
+  "getProfileByUserId" | "getRolesByUserId"
+>;
+
+export class AuthService {
+  constructor(
+    private readonly repository: AuthRepositoryLike,
+    private readonly adminRepository: AuthAdminRepositoryLike,
+  ) {}
 
   async signUp(input: SignUpInput) {
     const { data, error } = await this.repository.signUp(input);

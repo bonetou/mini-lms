@@ -1,9 +1,24 @@
 import { NextRequest } from "next/server";
-import { cancelConsultationController } from "@/lib/modules/consultations/controller";
+import { requireAuthContext } from "@/lib/api/auth-context";
+import { errorResponse } from "@/lib/api/http";
+import { ConsultationsController } from "@/lib/modules/consultations/controller";
+import { ConsultationsRepository } from "@/lib/modules/consultations/repository";
+import { ConsultationsService } from "@/lib/modules/consultations/service";
 
 export async function PATCH(
   request: NextRequest,
   context: { params: Promise<{ id: string }> },
 ) {
-  return cancelConsultationController(request, await context.params);
+  try {
+    const authContext = await requireAuthContext(request);
+    const repository = new ConsultationsRepository(authContext.routeClient.supabase);
+    const service = new ConsultationsService(repository);
+    const controller = new ConsultationsController(service);
+
+    return authContext.routeClient.applyCookies(
+      await controller.cancel(request, authContext, await context.params),
+    );
+  } catch (error) {
+    return errorResponse(error);
+  }
 }

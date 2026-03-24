@@ -1,6 +1,5 @@
 import { NextRequest } from "next/server";
 import { successResponse, parseJsonBody } from "@/lib/api/http";
-import { withApiHandler } from "@/lib/api/auth-context";
 import { AuthService } from "./service";
 import {
   forgotPasswordBodySchema,
@@ -9,66 +8,57 @@ import {
   updatePasswordBodySchema,
 } from "./schemas";
 
-export async function signUpController(request: NextRequest) {
-  return withApiHandler(request, async (routeClient) => {
+type AuthServiceLike = Pick<
+  AuthService,
+  "signUp" | "login" | "logout" | "me" | "forgotPassword" | "updatePassword"
+>;
+
+export class AuthController {
+  constructor(private readonly service: AuthServiceLike) {}
+
+  async signUp(request: NextRequest) {
     const body = await parseJsonBody(request, signUpBodySchema);
-    const service = new AuthService(routeClient.supabase);
-    const data = await service.signUp({
+    const data = await this.service.signUp({
       ...body,
       emailRedirectTo: `${request.nextUrl.origin}/dashboard`,
     });
 
     return successResponse(data, { status: 201 });
-  });
-}
+  }
 
-export async function loginController(request: NextRequest) {
-  return withApiHandler(request, async (routeClient) => {
+  async login(request: NextRequest) {
     const body = await parseJsonBody(request, loginBodySchema);
-    const service = new AuthService(routeClient.supabase);
-    const data = await service.login(body);
+    const data = await this.service.login(body);
 
     return successResponse(data);
-  });
-}
+  }
 
-export async function logoutController(request: NextRequest) {
-  return withApiHandler(request, async (routeClient) => {
-    const service = new AuthService(routeClient.supabase);
-    const data = await service.logout();
+  async logout() {
+    const data = await this.service.logout();
 
     return successResponse(data);
-  });
-}
+  }
 
-export async function meController(request: NextRequest) {
-  return withApiHandler(request, async (routeClient) => {
-    const service = new AuthService(routeClient.supabase);
-    const data = await service.me();
+  async me() {
+    const data = await this.service.me();
 
     return successResponse(data);
-  });
-}
+  }
 
-export async function forgotPasswordController(request: NextRequest) {
-  return withApiHandler(request, async (routeClient) => {
+  async forgotPassword(request: NextRequest) {
     const body = await parseJsonBody(request, forgotPasswordBodySchema);
-    const service = new AuthService(routeClient.supabase);
-    const data = await service.forgotPassword({
+    const data = await this.service.forgotPassword({
       ...body,
       redirectTo: `${request.nextUrl.origin}/auth/update-password`,
     });
 
     return successResponse(data);
-  });
-}
+  }
 
-export async function updatePasswordController(request: NextRequest) {
-  return withApiHandler(request, async (routeClient) => {
+  async updatePassword(request: NextRequest) {
     const body = await parseJsonBody(request, updatePasswordBodySchema);
-    const service = new AuthService(routeClient.supabase);
-    const data = await service.updatePassword(body);
+    const data = await this.service.updatePassword(body);
 
     return successResponse(data);
-  });
+  }
 }

@@ -1,18 +1,12 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { AdminService } from "@/lib/modules/admin/service";
 
-const { adminRepositoryMock } = vi.hoisted(() => ({
-  adminRepositoryMock: {
-    listConsultations: vi.fn(),
-    getConsultationById: vi.fn(),
-    listUsers: vi.fn(),
-    getUserById: vi.fn(),
-  },
-}));
-
-vi.mock("@/lib/modules/admin/repository", () => ({
-  AdminRepository: vi.fn(() => adminRepositoryMock),
-}));
+const adminRepositoryMock = {
+  listConsultations: vi.fn(),
+  getConsultationById: vi.fn(),
+  listUsers: vi.fn(),
+  getUserById: vi.fn(),
+};
 
 describe("AdminService", () => {
   beforeEach(() => {
@@ -27,7 +21,7 @@ describe("AdminService", () => {
       pageSize: 10,
     });
 
-    const service = new AdminService();
+    const service = new AdminService(adminRepositoryMock);
 
     await expect(
       service.listConsultations({
@@ -50,7 +44,7 @@ describe("AdminService", () => {
   it("throws NOT_FOUND for unknown consultations", async () => {
     adminRepositoryMock.getConsultationById.mockResolvedValue(null);
 
-    const service = new AdminService();
+    const service = new AdminService(adminRepositoryMock);
 
     await expect(service.getConsultationById("missing")).rejects.toMatchObject({
       status: 404,
@@ -67,7 +61,7 @@ describe("AdminService", () => {
       pageSize: 10,
     });
 
-    const service = new AdminService();
+    const service = new AdminService(adminRepositoryMock);
 
     await expect(service.listUsers({ page: 1, pageSize: 10 })).resolves.toEqual({
       items: [],
@@ -80,7 +74,7 @@ describe("AdminService", () => {
   it("throws NOT_FOUND for unknown users", async () => {
     adminRepositoryMock.getUserById.mockResolvedValue(null);
 
-    const service = new AdminService();
+    const service = new AdminService(adminRepositoryMock);
 
     await expect(service.getUserById("missing")).rejects.toMatchObject({
       status: 404,

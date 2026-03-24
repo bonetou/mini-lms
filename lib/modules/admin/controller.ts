@@ -3,7 +3,6 @@ import {
   parseRouteParams,
   parseSearchParams,
   successResponse,
-  errorResponse,
 } from "@/lib/api/http";
 import { requireAdminContext } from "@/lib/api/auth-context";
 import { AdminService } from "./service";
@@ -14,66 +13,57 @@ import {
   adminUsersListQuerySchema,
 } from "./schemas";
 
-export async function listAdminConsultationsController(request: NextRequest) {
-  try {
-    const context = await requireAdminContext(request);
+type AdminServiceLike = Pick<
+  AdminService,
+  "listConsultations" | "getConsultationById" | "listUsers" | "getUserById"
+>;
+
+export class AdminController {
+  constructor(private readonly service: AdminServiceLike) {}
+
+  async listConsultations(
+    request: NextRequest,
+  ) {
     const query = parseSearchParams(
       request.nextUrl.searchParams,
       adminConsultationListQuerySchema,
     );
-    const service = new AdminService();
-    const data = await service.listConsultations(query);
+    const data = await this.service.listConsultations(query);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function getAdminConsultationController(
-  request: NextRequest,
-  params: unknown,
-) {
-  try {
-    const context = await requireAdminContext(request);
+  async getConsultationById(
+    _request: NextRequest,
+    _context: Awaited<ReturnType<typeof requireAdminContext>>,
+    params: unknown,
+  ) {
     const { id } = parseRouteParams(params, adminConsultationParamsSchema);
-    const service = new AdminService();
-    const data = await service.getConsultationById(id);
+    const data = await this.service.getConsultationById(id);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function listAdminUsersController(request: NextRequest) {
-  try {
-    const context = await requireAdminContext(request);
+  async listUsers(
+    request: NextRequest,
+  ) {
     const query = parseSearchParams(
       request.nextUrl.searchParams,
       adminUsersListQuerySchema,
     );
-    const service = new AdminService();
-    const data = await service.listUsers(query);
+    const data = await this.service.listUsers(query);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
-}
 
-export async function getAdminUserController(
-  request: NextRequest,
-  params: unknown,
-) {
-  try {
-    const context = await requireAdminContext(request);
+  async getUserById(
+    _request: NextRequest,
+    _context: Awaited<ReturnType<typeof requireAdminContext>>,
+    params: unknown,
+  ) {
     const { id } = parseRouteParams(params, adminUserParamsSchema);
-    const service = new AdminService();
-    const data = await service.getUserById(id);
+    const data = await this.service.getUserById(id);
 
-    return context.routeClient.applyCookies(successResponse(data));
-  } catch (error) {
-    return errorResponse(error);
+    return successResponse(data);
   }
 }

@@ -119,6 +119,14 @@ npm run supabase:status
 npm run dev
 ```
 
+### Demo Credentials
+
+Available after `npm run supabase:db:reset`:
+
+- Admin: `admin@mini-lms.local` / `Password123!`
+- Student: `student@mini-lms.local` / `Password123!`
+- Student 2: `student.two@mini-lms.local` / `Password123!`
+
 ## Running tests
 ```bash
 npm run test

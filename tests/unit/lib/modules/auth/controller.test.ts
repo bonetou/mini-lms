@@ -1,18 +1,22 @@
 import { NextRequest } from "next/server";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  forgotPasswordController,
   loginController,
   logoutController,
   meController,
   signUpController,
+  updatePasswordController,
 } from "@/lib/modules/auth/controller";
 
 const { authServiceMock, routeClientMock } = vi.hoisted(() => ({
   authServiceMock: {
+    forgotPassword: vi.fn(),
     signUp: vi.fn(),
     login: vi.fn(),
     logout: vi.fn(),
     me: vi.fn(),
+    updatePassword: vi.fn(),
   },
   routeClientMock: {
     supabase: {},
@@ -139,6 +143,65 @@ describe("auth controllers", () => {
         code: "BAD_REQUEST",
         message: "Request validation failed",
       },
+    });
+  });
+
+  it("forgotPasswordController passes the request origin as redirectTo", async () => {
+    authServiceMock.forgotPassword.mockResolvedValue({ success: true });
+
+    const request = new NextRequest(
+      "http://localhost:3000/api/auth/forgot-password",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          email: "user@example.com",
+        }),
+        headers: {
+          "content-type": "application/json",
+        },
+      },
+    );
+
+    const response = await forgotPasswordController(request);
+
+    expect(authServiceMock.forgotPassword).toHaveBeenCalledWith({
+      email: "user@example.com",
+      redirectTo: "http://localhost:3000/auth/update-password",
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      data: { success: true },
+      error: null,
+      meta: null,
+    });
+  });
+
+  it("updatePasswordController validates and returns success", async () => {
+    authServiceMock.updatePassword.mockResolvedValue({ success: true });
+
+    const request = new NextRequest(
+      "http://localhost/api/auth/update-password",
+      {
+        method: "POST",
+        body: JSON.stringify({
+          password: "password123",
+        }),
+        headers: {
+          "content-type": "application/json",
+        },
+      },
+    );
+
+    const response = await updatePasswordController(request);
+
+    expect(authServiceMock.updatePassword).toHaveBeenCalledWith({
+      password: "password123",
+    });
+    expect(response.status).toBe(200);
+    await expect(response.json()).resolves.toEqual({
+      data: { success: true },
+      error: null,
+      meta: null,
     });
   });
 

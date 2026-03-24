@@ -15,6 +15,15 @@ type LoginInput = {
   password: string;
 };
 
+type ForgotPasswordInput = {
+  email: string;
+  redirectTo: string;
+};
+
+type UpdatePasswordInput = {
+  password: string;
+};
+
 export class AuthService {
   private readonly repository: AuthRepository;
   private readonly adminRepository = new AuthAdminRepository();
@@ -111,6 +120,30 @@ export class AuthService {
       profile,
       roles,
       isAdmin: roles.includes("admin"),
+    };
+  }
+
+  async forgotPassword(input: ForgotPasswordInput) {
+    const { error } = await this.repository.resetPasswordForEmail(input);
+
+    if (error) {
+      throw ApiError.badRequest(error.message);
+    }
+
+    return {
+      success: true,
+    };
+  }
+
+  async updatePassword(input: UpdatePasswordInput) {
+    const { error } = await this.repository.updateUserPassword(input);
+
+    if (error) {
+      throw ApiError.badRequest(error.message);
+    }
+
+    return {
+      success: true,
     };
   }
 }

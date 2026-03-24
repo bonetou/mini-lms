@@ -17,6 +17,14 @@ type SignUpInput = {
   lastName?: string;
 };
 
+type ForgotPasswordInput = {
+  email: string;
+};
+
+type UpdatePasswordInput = {
+  password: string;
+};
+
 type LoginResponse = {
   user: {
     id: string;
@@ -35,6 +43,10 @@ type SignUpResponse = {
     accessToken: string;
     expiresAt: number | null;
   } | null;
+};
+
+type AuthSuccessResponse = {
+  success: true;
 };
 
 export function useMeQuery() {
@@ -81,5 +93,25 @@ export function useLogoutMutation() {
       await queryClient.resetQueries({ queryKey: queryKeys.me });
       await queryClient.invalidateQueries({ queryKey: ["consultations"] });
     },
+  });
+}
+
+export function useForgotPasswordMutation() {
+  return useMutation({
+    mutationFn: (input: ForgotPasswordInput) =>
+      apiRequest<AuthSuccessResponse>("/api/auth/forgot-password", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
+  });
+}
+
+export function useUpdatePasswordMutation() {
+  return useMutation({
+    mutationFn: (input: UpdatePasswordInput) =>
+      apiRequest<AuthSuccessResponse>("/api/auth/update-password", {
+        method: "POST",
+        body: JSON.stringify(input),
+      }),
   });
 }

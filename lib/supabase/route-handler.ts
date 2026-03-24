@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextRequest, NextResponse } from "next/server";
+import { withAuthCookieOptions } from "./cookies";
 
 export function createRouteHandlerClient(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
@@ -23,9 +24,13 @@ export function createRouteHandlerClient(request: NextRequest) {
             request,
           });
 
-          cookiesToSet.forEach(({ name, value, options }) => {
-            supabaseResponse.cookies.set(name, value, options);
-          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(
+              name,
+              value,
+              withAuthCookieOptions(options),
+            ),
+          );
         },
       },
     },

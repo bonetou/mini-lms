@@ -11,3 +11,11 @@ export const loginBodySchema = z.object({
   email: z.email(),
   password: z.string().min(1),
 });
+
+export const forgotPasswordBodySchema = z.object({
+  email: z.email(),
+});
+
+export const updatePasswordBodySchema = z.object({
+  password: z.string().min(8),
+});

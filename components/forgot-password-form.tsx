@@ -1,7 +1,11 @@
 "use client";
 
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
-import { createClient } from "@/lib/supabase/client";
+import { ApiClientError, getApiErrorMessage } from "@/lib/api/client";
+import { useForgotPasswordMutation } from "@/lib/query/auth";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -12,9 +16,6 @@ import {
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useEffect, useState } from "react";
 
 const RESEND_DELAY_SECONDS = 60;
 
@@ -28,6 +29,7 @@ export function ForgotPasswordForm({
   const [isLoading, setIsLoading] = useState(false);
   const [resendCooldown, setResendCooldown] = useState(0);
   const pathname = usePathname();
+  const forgotPasswordMutation = useForgotPasswordMutation();
 
   useEffect(() => {
     setEmail("");
@@ -50,20 +52,19 @@ export function ForgotPasswordForm({
   }, [resendCooldown]);
 
   const sendResetEmail = async () => {
-    const supabase = createClient();
     setIsLoading(true);
     setError(null);
 
     try {
-      // The url which will be included in the email. This URL needs to be configured in your redirect URLs in the Supabase dashboard at https://supabase.com/dashboard/project/_/auth/url-configuration
-      const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/auth/update-password`,
-      });
-      if (error) throw error;
+      await forgotPasswordMutation.mutateAsync({ email });
       setSuccess(true);
       setResendCooldown(RESEND_DELAY_SECONDS);
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : "An error occurred");
+      if (error instanceof ApiClientError) {
+        setError(getApiErrorMessage(error));
+      } else {
+        setError(error instanceof Error ? error.message : "An error occurred");
+      }
     } finally {
       setIsLoading(false);
     }

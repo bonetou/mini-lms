@@ -2,7 +2,12 @@ import { NextRequest } from "next/server";
 import { successResponse, parseJsonBody } from "@/lib/api/http";
 import { withApiHandler } from "@/lib/api/auth-context";
 import { AuthService } from "./service";
-import { loginBodySchema, signUpBodySchema } from "./schemas";
+import {
+  forgotPasswordBodySchema,
+  loginBodySchema,
+  signUpBodySchema,
+  updatePasswordBodySchema,
+} from "./schemas";
 
 export async function signUpController(request: NextRequest) {
   return withApiHandler(request, async (routeClient) => {
@@ -40,6 +45,29 @@ export async function meController(request: NextRequest) {
   return withApiHandler(request, async (routeClient) => {
     const service = new AuthService(routeClient.supabase);
     const data = await service.me();
+
+    return successResponse(data);
+  });
+}
+
+export async function forgotPasswordController(request: NextRequest) {
+  return withApiHandler(request, async (routeClient) => {
+    const body = await parseJsonBody(request, forgotPasswordBodySchema);
+    const service = new AuthService(routeClient.supabase);
+    const data = await service.forgotPassword({
+      ...body,
+      redirectTo: `${request.nextUrl.origin}/auth/update-password`,
+    });
+
+    return successResponse(data);
+  });
+}
+
+export async function updatePasswordController(request: NextRequest) {
+  return withApiHandler(request, async (routeClient) => {
+    const body = await parseJsonBody(request, updatePasswordBodySchema);
+    const service = new AuthService(routeClient.supabase);
+    const data = await service.updatePassword(body);
 
     return successResponse(data);
   });

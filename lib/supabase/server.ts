@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
+import { withAuthCookieOptions } from "./cookies";
 
 /**
  * Especially important if using Fluid compute: Don't put this client in a
@@ -20,7 +21,7 @@ export async function createClient() {
         setAll(cookiesToSet) {
           try {
             cookiesToSet.forEach(({ name, value, options }) =>
-              cookieStore.set(name, value, options),
+              cookieStore.set(name, value, withAuthCookieOptions(options)),
             );
           } catch {
             // The `setAll` method was called from a Server Component.

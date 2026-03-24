@@ -3,10 +3,12 @@ import { AuthService } from "@/lib/modules/auth/service";
 
 const { authRepositoryMock, authAdminRepositoryMock } = vi.hoisted(() => ({
   authRepositoryMock: {
+    resetPasswordForEmail: vi.fn(),
     signUp: vi.fn(),
     signIn: vi.fn(),
     signOut: vi.fn(),
     getUser: vi.fn(),
+    updateUserPassword: vi.fn(),
   },
   authAdminRepositoryMock: {
     getProfileByUserId: vi.fn(),
@@ -125,6 +127,23 @@ describe("AuthService", () => {
     });
   });
 
+  it("returns success:true on forgotPassword", async () => {
+    authRepositoryMock.resetPasswordForEmail.mockResolvedValue({
+      error: null,
+    });
+
+    const service = new AuthService(supabase);
+
+    await expect(
+      service.forgotPassword({
+        email: "user@example.com",
+        redirectTo: "http://localhost/auth/update-password",
+      }),
+    ).resolves.toEqual({
+      success: true,
+    });
+  });
+
   it("returns success:true on logout", async () => {
     authRepositoryMock.signOut.mockResolvedValue({
       error: null,
@@ -179,6 +198,22 @@ describe("AuthService", () => {
     await expect(service.me()).rejects.toMatchObject({
       status: 401,
       code: "UNAUTHORIZED",
+    });
+  });
+
+  it("returns success:true on updatePassword", async () => {
+    authRepositoryMock.updateUserPassword.mockResolvedValue({
+      error: null,
+    });
+
+    const service = new AuthService(supabase);
+
+    await expect(
+      service.updatePassword({
+        password: "password123",
+      }),
+    ).resolves.toEqual({
+      success: true,
     });
   });
 });

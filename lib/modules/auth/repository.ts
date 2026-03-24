@@ -16,6 +16,15 @@ type LoginInput = {
   password: string;
 };
 
+type ForgotPasswordInput = {
+  email: string;
+  redirectTo: string;
+};
+
+type UpdatePasswordInput = {
+  password: string;
+};
+
 export class AuthRepository {
   constructor(private readonly supabase: SupabaseClient) {}
 
@@ -43,6 +52,18 @@ export class AuthRepository {
 
   async getUser() {
     return this.supabase.auth.getUser();
+  }
+
+  async resetPasswordForEmail(input: ForgotPasswordInput) {
+    return this.supabase.auth.resetPasswordForEmail(input.email, {
+      redirectTo: input.redirectTo,
+    });
+  }
+
+  async updateUserPassword(input: UpdatePasswordInput) {
+    return this.supabase.auth.updateUser({
+      password: input.password,
+    });
   }
 }
 

@@ -102,19 +102,6 @@ function consultationRow(overrides: Record<string, unknown> = {}) {
   };
 }
 
-function historyRow(overrides: Record<string, unknown> = {}) {
-  return {
-    id: "history-1",
-    consultation_id: "consultation-1",
-    changed_by_user_id: "student-1",
-    from_status: null,
-    to_status: "SCHEDULED",
-    notes: null,
-    created_at: "2026-03-20T10:00:00.000Z",
-    ...overrides,
-  };
-}
-
 describe("ConsultationsService", () => {
   beforeEach(() => {
     vi.clearAllMocks();
@@ -152,24 +139,6 @@ describe("ConsultationsService", () => {
     });
   });
 
-  it("rejects all-scope listing for non-admin users", async () => {
-    const service = new ConsultationsService(buildContext());
-
-    await expect(
-      service.list(buildContext(), {
-        scope: "all",
-        status: undefined,
-        studentId: undefined,
-        scheduledFrom: undefined,
-        scheduledTo: undefined,
-        page: 1,
-        pageSize: 10,
-      }),
-    ).rejects.toMatchObject({
-      status: 403,
-      code: "FORBIDDEN",
-    });
-  });
 
   it("rejects create when scheduledAt is in the past", async () => {
     const service = new ConsultationsService(buildContext());
@@ -201,36 +170,6 @@ describe("ConsultationsService", () => {
     });
   });
 
-  it("returns consultation detail with history for admins", async () => {
-    adminRepositoryMock.findById.mockResolvedValue(consultationRow());
-    adminRepositoryMock.getHistory.mockResolvedValue([
-      historyRow({ to_status: "RESCHEDULED" }),
-    ]);
-    adminRepositoryMock.getStudentProfile.mockResolvedValue({
-      id: "student-1",
-      email: "student@example.com",
-      firstName: "Jane",
-      lastName: "Doe",
-      createdAt: "2026-03-20T10:00:00.000Z",
-      updatedAt: "2026-03-20T10:00:00.000Z",
-    });
-
-    const context = buildContext({ isAdmin: true, roles: ["admin"] });
-    const service = new ConsultationsService(context);
-    const result = await service.getById(context, "consultation-1");
-
-    expect(result).toEqual(
-      expect.objectContaining({
-        id: "consultation-1",
-        studentId: "student-1",
-        statusHistory: [
-          expect.objectContaining({
-            toStatus: "RESCHEDULED",
-          }),
-        ],
-      }),
-    );
-  });
 
   it("rejects editing cancelled consultations", async () => {
     repositoryMock.findOwnById.mockResolvedValue(

@@ -2,12 +2,10 @@ import { ApiError } from "@/lib/api/errors";
 import { AuthContext } from "@/lib/api/auth-context";
 import { nowIso } from "@/lib/dates";
 import {
-  AdminConsultationListQuery,
   ConsultationListQuery,
   ConsultationStatus,
 } from "./schemas";
 import {
-  ConsultationsAdminRepository,
   ConsultationsRepository,
   mapConsultation,
   mapConsultationHistory,
@@ -15,7 +13,6 @@ import {
 
 export class ConsultationsService {
   private readonly repository: ConsultationsRepository;
-  private readonly adminRepository = new ConsultationsAdminRepository();
 
   constructor(context: AuthContext) {
     this.repository = new ConsultationsRepository(context.routeClient.supabase);
@@ -74,31 +71,6 @@ export class ConsultationsService {
   }
 
   async list(context: AuthContext, filters: ConsultationListQuery) {
-    if (filters.scope === "all") {
-      if (!context.isAdmin) {
-        throw ApiError.forbidden();
-      }
-
-      const adminFilters: AdminConsultationListQuery = {
-        search: undefined,
-        status: filters.status,
-        studentId: filters.studentId,
-        scheduledFrom: filters.scheduledFrom,
-        scheduledTo: filters.scheduledTo,
-        page: filters.page,
-        pageSize: filters.pageSize,
-      };
-      const result = await this.adminRepository.listAll(adminFilters);
-
-      return {
-        items: result.rows.map(mapConsultation),
-        total: result.count,
-        page: filters.page,
-        pageSize: filters.pageSize,
-        scope: "all" as const,
-      };
-    }
-
     const result = await this.repository.listOwn(context.user.id, filters);
 
     return {
@@ -129,24 +101,18 @@ export class ConsultationsService {
   }
 
   async getById(context: AuthContext, consultationId: string) {
-    const consultation = context.isAdmin
-      ? await this.adminRepository.findById(consultationId)
-      : await this.repository.findOwnById(consultationId, context.user.id);
+    const consultation = await this.repository.findOwnById(consultationId, context.user.id);
 
     if (!consultation) {
       throw ApiError.notFound("Consultation not found");
     }
 
-    const [historyRows, studentProfile] = await Promise.all([
-      context.isAdmin
-        ? this.adminRepository.getHistory(consultationId)
-        : this.repository.getOwnHistory(consultationId),
-      this.adminRepository.getStudentProfile(consultation.student_id),
+    const [historyRows] = await Promise.all([
+      this.repository.getOwnHistory(consultationId),
     ]);
 
     return {
       ...mapConsultation(consultation),
-      studentProfile,
       statusHistory: historyRows.map(mapConsultationHistory),
     };
   }
